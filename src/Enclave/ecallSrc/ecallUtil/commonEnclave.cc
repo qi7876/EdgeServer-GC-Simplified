@@ -1,35 +1,36 @@
 /**
  * @file commonEnclave.cc
  * @author Zuoru YANG (zryang@cse.cuhk.edu.hk)
- * @brief define the 
+ * @brief define the
  * @version 0.1
  * @date 2020-12-21
- * 
+ *
  * @copyright Copyright (c) 2020
- * 
+ *
  */
 
 #include "../../include/commonEnclave.h"
 
 namespace Enclave {
-    unordered_map<int, string> clientSessionKeyIndex_;
-    uint8_t* enclaveKey_;
-    uint8_t* indexQueryKey_;
-    bool firstBootstrap_; // 
-    // config
-    uint64_t sendChunkBatchSize_;
-    uint64_t sendRecipeBatchSize_;
-    uint64_t topKParam_;
-    // lock
-    mutex sessionKeyLck_;
-    mutex sketchLck_;
-    mutex topKIndexLck_;
-    // the obj to the enclave index
-    EnclaveBase* enclaveBaseObj_;
+unordered_map<int, string> clientSessionKeyIndex_;
+uint8_t* enclaveKey_;
+uint8_t* indexQueryKey_;
+bool firstBootstrap_; //
+// config
+uint64_t sendChunkBatchSize_;
+uint64_t sendRecipeBatchSize_;
+uint64_t topKParam_;
+// lock
+mutex sessionKeyLck_;
+mutex sketchLck_;
+mutex topKIndexLck_;
+// the obj to the enclave index
+EnclaveBase* enclaveBaseObj_;
 };
 
-void Enclave::Logging(const char* logger, const char* fmt, ...) {
-    char buf[BUFSIZ] = {'\0'};
+void Enclave::Logging(const char* logger, const char* fmt, ...)
+{
+    char buf[BUFSIZ] = { '\0' };
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(buf, BUFSIZ, fmt, ap);
@@ -41,12 +42,13 @@ void Enclave::Logging(const char* logger, const char* fmt, ...) {
 
 /**
  * @brief write the buffer to the file
- * 
+ *
  * @param buffer the pointer to the buffer
  * @param bufferSize the buffer size
  * @param fileName the file name
  */
-void Enclave::WriteBufferToFile(uint8_t* buffer, size_t bufferSize, const char* fileName) {
+void Enclave::WriteBufferToFile(uint8_t* buffer, size_t bufferSize, const char* fileName)
+{
     size_t remainSize = bufferSize;
     size_t offset = 0;
     while (remainSize != 0) {
@@ -61,22 +63,23 @@ void Enclave::WriteBufferToFile(uint8_t* buffer, size_t bufferSize, const char* 
             break;
         }
     }
-    return ;
+    return;
 }
 
 /**
  * @brief read the file to the buffer
- * 
+ *
  * @param buffer the pointer to the buffer
  * @param bufferSize the buffer size
  * @param fileName the file name
  */
-void Enclave::ReadFileToBuffer(uint8_t* buffer, size_t bufferSize, const char* fileName) {
+void Enclave::ReadFileToBuffer(uint8_t* buffer, size_t bufferSize, const char* fileName)
+{
     size_t remainSize = bufferSize;
     size_t offset = 0;
     while (remainSize != 0) {
         if (remainSize > SGX_PERSISTENCE_BUFFER_SIZE) {
-            Ocall_ReadSealedData(fileName, buffer + offset, SGX_PERSISTENCE_BUFFER_SIZE); 
+            Ocall_ReadSealedData(fileName, buffer + offset, SGX_PERSISTENCE_BUFFER_SIZE);
             offset += SGX_PERSISTENCE_BUFFER_SIZE;
             remainSize -= SGX_PERSISTENCE_BUFFER_SIZE;
         } else {
@@ -86,15 +89,15 @@ void Enclave::ReadFileToBuffer(uint8_t* buffer, size_t bufferSize, const char* f
             break;
         }
     }
-    return ;
+    return;
 }
 
 void Enclave::PrintBinaryBuffer(uint8_t* buffer, size_t bufferSize)
 {
     for (size_t i = 0; i < bufferSize; i++) {
-        //fprintf(stdout, "%02x", buffer[i]);
+        // fprintf(stdout, "%02x", buffer[i]);
         Enclave::Logging("Print", "%02x\n", buffer[i]);
     }
     Enclave::Logging("Print", "%\n");
-    return ;
+    return;
 }

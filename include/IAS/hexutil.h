@@ -25,15 +25,13 @@ in the License.
 extern "C" {
 #endif
 
+void print_hexstring(FILE* fp, const void* src, size_t len);
+void print_hexstring_nl(FILE* fp, const void* src, size_t len);
 
-void print_hexstring(FILE *fp, const void *src, size_t len);
-void print_hexstring_nl(FILE *fp, const void *src, size_t len);
-
-const char *hexstring(const void *src, size_t len);
+const char* hexstring(const void* src, size_t len);
 
 #ifdef __cplusplus
 };
 #endif
 
 #endif
-

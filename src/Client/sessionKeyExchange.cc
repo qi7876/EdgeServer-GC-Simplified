@@ -4,40 +4,43 @@
  * @brief session key exchange based on ECDH
  * @version 0.1
  * @date 2021-09-13
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #include "../../include/sessionKeyExchange.h"
 
 /**
  * @brief Construct a new Session Key Exchange object
- * 
+ *
  * @param dataSecureChannel for secure communication
  */
-SessionKeyExchange::SessionKeyExchange(SSLConnection* dataSecureChannel) {
+SessionKeyExchange::SessionKeyExchange(SSLConnection* dataSecureChannel)
+{
     dataSecureChannel_ = dataSecureChannel;
 }
 
 /**
  * @brief Destroy the Session Key Exchange object
- * 
+ *
  */
-SessionKeyExchange::~SessionKeyExchange() {
+SessionKeyExchange::~SessionKeyExchange()
+{
 }
 
 /**
  * @brief generate a key pair
- * 
+ *
  * @return EVP_PKEY* the key pair
  */
-EVP_PKEY* SessionKeyExchange::GenerateKeyPair() {
+EVP_PKEY* SessionKeyExchange::GenerateKeyPair()
+{
     EVP_PKEY_CTX* paramGenCtx = NULL;
     EVP_PKEY_CTX* keyGenCtx = NULL;
 
     EVP_PKEY* params = NULL;
-    EVP_PKEY* keyPair = NULL; // return 
+    EVP_PKEY* keyPair = NULL; // return
 
     paramGenCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
 
@@ -73,17 +76,18 @@ EVP_PKEY* SessionKeyExchange::GenerateKeyPair() {
     EVP_PKEY_free(params);
     EC_KEY_free(ecKey);
     EC_GROUP_free(tmpECGroup);
-    
+
     return keyPair;
 }
 
 /**
  * @brief extract the corresponding public key from the private key
- * 
+ *
  * @param privateKey the input private key
  * @return EVP_PKEY* the public key
  */
-EVP_PKEY* SessionKeyExchange::ExtractPublicKey(EVP_PKEY* privateKey) {
+EVP_PKEY* SessionKeyExchange::ExtractPublicKey(EVP_PKEY* privateKey)
+{
     EC_KEY* ecKey = EVP_PKEY_get1_EC_KEY(privateKey);
     const EC_POINT* ecPoint = EC_KEY_get0_public_key(ecKey);
     EVP_PKEY* publicKey = EVP_PKEY_new();
@@ -98,14 +102,15 @@ EVP_PKEY* SessionKeyExchange::ExtractPublicKey(EVP_PKEY* privateKey) {
 }
 
 /**
- * @brief derive the shared secret 
- * 
+ * @brief derive the shared secret
+ *
  * @param publicKey the input peer public key
  * @param privateKey the input private key
- * @return DerivedKey_t* 
+ * @return DerivedKey_t*
  */
-DerivedKey_t* SessionKeyExchange::DerivedShared(EVP_PKEY* publicKey, EVP_PKEY* privateKey) {
-    DerivedKey_t* dk = (DerivedKey_t*) malloc(sizeof(DerivedKey_t));
+DerivedKey_t* SessionKeyExchange::DerivedShared(EVP_PKEY* publicKey, EVP_PKEY* privateKey)
+{
+    DerivedKey_t* dk = (DerivedKey_t*)malloc(sizeof(DerivedKey_t));
     EVP_PKEY_CTX* derivationCtx = NULL;
     derivationCtx = EVP_PKEY_CTX_new(privateKey, NULL);
 
@@ -117,8 +122,7 @@ DerivedKey_t* SessionKeyExchange::DerivedShared(EVP_PKEY* publicKey, EVP_PKEY* p
         exit(EXIT_FAILURE);
     }
 
-    dk->secret = (uint8_t*) malloc(dk->length);
-
+    dk->secret = (uint8_t*)malloc(dk->length);
 
     if (1 != (EVP_PKEY_derive(derivationCtx, dk->secret, &dk->length))) {
         tool::Logging(myName_.c_str(), "derive the key length fails.\n");
@@ -127,18 +131,19 @@ DerivedKey_t* SessionKeyExchange::DerivedShared(EVP_PKEY* publicKey, EVP_PKEY* p
 
     EVP_PKEY_CTX_free(derivationCtx);
 
-    return dk; 
+    return dk;
 }
 
 /**
  * @brief Generate a secret via ECDH
- * 
+ *
  * @param secret string the string to store the secret
- * @param serverConnection the connection to the server 
+ * @param serverConnection the connection to the server
  * @param clientID the client ID
  */
-void SessionKeyExchange::GeneratingSecret(uint8_t* secret, SSL* serverConnection, 
-    uint32_t clientID) {
+void SessionKeyExchange::GeneratingSecret(uint8_t* secret, SSL* serverConnection,
+    uint32_t clientID)
+{
     // generate a random private key
     EVP_PKEY* privateKey = GenerateKeyPair();
 
@@ -153,7 +158,7 @@ void SessionKeyExchange::GeneratingSecret(uint8_t* secret, SSL* serverConnection
     tmpHeader.messageType = SESSION_KEY_INIT;
     tmpHeader.dataSize = pubKeyLen;
     tmpHeader.clientID = clientID;
-    uint8_t* sendBuffer = (uint8_t*) malloc(sizeof(NetworkHead_t) + pubKeyLen);
+    uint8_t* sendBuffer = (uint8_t*)malloc(sizeof(NetworkHead_t) + pubKeyLen);
 
     memcpy(sendBuffer, &tmpHeader, sizeof(NetworkHead_t));
     memcpy(sendBuffer + sizeof(NetworkHead_t), pubKeyBuffer, pubKeyLen);
@@ -162,7 +167,7 @@ void SessionKeyExchange::GeneratingSecret(uint8_t* secret, SSL* serverConnection
         exit(EXIT_FAILURE);
     }
 
-    uint32_t recvSize = 0; 
+    uint32_t recvSize = 0;
     if (!dataSecureChannel_->ReceiveData(serverConnection, sendBuffer, recvSize)) {
         tool::Logging(myName_.c_str(), "recv the session key reply fails.\n");
         exit(EXIT_FAILURE);
@@ -193,5 +198,5 @@ void SessionKeyExchange::GeneratingSecret(uint8_t* secret, SSL* serverConnection
     EVP_PKEY_free(peerPubKey);
     free(sessionKey->secret);
     free(sessionKey);
-    return ;
+    return;
 }
