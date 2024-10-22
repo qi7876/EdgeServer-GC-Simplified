@@ -11,6 +11,7 @@
 #ifndef MY_DEFINE_H
 #define MY_DEFINE_H
 
+#include <cmath>
 #include <fstream>
 #include <getopt.h>
 #include <iomanip>
