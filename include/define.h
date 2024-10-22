@@ -11,10 +11,15 @@
 #ifndef MY_DEFINE_H
 #define MY_DEFINE_H
 
-#include <bits/stdc++.h>
+#include <fstream>
 #include <getopt.h>
 #include <iomanip>
+#include <iostream>
 #include <pthread.h>
+#include <sstream>
+#include <stddef.h>
+#include <stdint.h>
+#include <string>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>

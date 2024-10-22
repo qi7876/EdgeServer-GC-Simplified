@@ -9,6 +9,10 @@
  *
  */
 
+#include <stddef.h>
+#include <stdint.h>
+#include <string>
+
 #ifndef CONST_VAR_H
 #define CONST_VAR_H
 
