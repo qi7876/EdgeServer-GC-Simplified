@@ -12,6 +12,7 @@
 #define MY_DEFINE_H
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <getopt.h>
 #include <iomanip>
