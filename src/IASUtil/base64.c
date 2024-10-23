@@ -1,8 +1,8 @@
-#include "../../include/IAS/base64.h"
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <string.h>
 #include <sys/types.h>
+#include "../../include/IAS/base64.h"
 
 char* base64_encode(const char* msg, size_t sz)
 {

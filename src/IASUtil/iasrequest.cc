@@ -407,16 +407,16 @@ ias_error_t IAS_Request::report(map<string, string>& payload, string& content,
     }
 
     /*
-     * The response body has the attestation report. The headers have
-     * a signature of the report, and the public signing certificate.
-     * We need to:
-     *
-     * 1) Verify the certificate chain, to ensure it's issued by the
-     *    Intel CA (passed with the -A option).
-     *
-     * 2) Extract the public key from the signing cert, and verify
-     *    the signature.
-     */
+	 * The response body has the attestation report. The headers have
+	 * a signature of the report, and the public signing certificate.
+	 * We need to:
+	 *
+	 * 1) Verify the certificate chain, to ensure it's issued by the
+	 *    Intel CA (passed with the -A option).
+	 *
+	 * 2) Extract the public key from the signing cert, and verify
+	 *    the signature.
+	 */
 
     // Get the certificate chain from the headers
 
@@ -529,10 +529,10 @@ ias_error_t IAS_Request::report(map<string, string>& payload, string& content,
     sign_cert = certvec[0]; /* The first cert in the list */
 
     /*
-     * The report body is SHA256 signed with the private key of the
-     * signing cert.  Extract the public key from the certificate and
-     * verify the signature.
-     */
+	 * The report body is SHA256 signed with the private key of the
+	 * signing cert.  Extract the public key from the certificate and
+	 * verify the signature.
+	 */
 
     if (debug_ias)
         eprintf("+++ Extracting public key from signing cert\n");
@@ -573,8 +573,8 @@ ias_error_t IAS_Request::report(map<string, string>& payload, string& content,
     }
 
     /*
-     * Check for advisory headers
-     */
+	 * Check for advisory headers
+	 */
 
     header = response.headers_as_string("Advisory-URL");
     if (header.length())

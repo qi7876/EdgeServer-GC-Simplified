@@ -4,35 +4,34 @@
  * @brief implement the interface of RA Util
  * @version 0.1
  * @date 2021-05-21
- *
+ * 
  * @copyright Copyright (c) 2021
- *
+ * 
  */
 
 #include "../../include/raUtil.h"
 
+
 /**
  * @brief Construct a new RAUtil object
- *
+ * 
  */
-RAUtil::RAUtil(SSLConnection* dataSecurityChannelObj)
-{
+RAUtil::RAUtil(SSLConnection* dataSecurityChannelObj) {
     dataSecureChannel_ = dataSecurityChannelObj;
     verbose_ = false;
-    // tool::Logging(myName_.c_str(), "init the RAUtil.\n");
+    //tool::Logging(myName_.c_str(), "init the RAUtil.\n");
 }
 
 /**
  * @brief Destroy the RAUtil object
- *
+ * 
  */
-RAUtil::~RAUtil()
-{
+RAUtil::~RAUtil() {
 }
 
+
 void RAUtil::DoAttestation(sgx_enclave_id_t eidSGX, sgx_ra_context_t& raCtx,
-    SSL* newClientConnection)
-{
+    SSL* newClientConnection) {
 #if (ENABLE_SGX_RA == 1)
     struct timeval sTime;
     struct timeval eTime;
@@ -57,7 +56,7 @@ void RAUtil::DoAttestation(sgx_enclave_id_t eidSGX, sgx_ra_context_t& raCtx,
         exit(EXIT_FAILURE);
     }
 
-    // generate msg0
+    // generate msg0 
     uint32_t msg0_extended_epid_group_id = 0;
     sgxStatus = sgx_get_extended_epid_group_id(&msg0_extended_epid_group_id);
 
@@ -71,7 +70,7 @@ void RAUtil::DoAttestation(sgx_enclave_id_t eidSGX, sgx_ra_context_t& raCtx,
     sgxStatus = sgx_ra_get_msg1(raCtx, eidSGX, sgx_ra_get_ga, &msg1);
     if (sgxStatus != SGX_SUCCESS) {
         tool::Logging(myName_.c_str(), "get msg1 fails.\n");
-        OcallUtil::PrintSGXErrorMessage(sgxStatus);
+        OcallUtil::PrintSGXErrorMessage(sgxStatus); 
         exit(EXIT_FAILURE);
     }
 
@@ -84,7 +83,7 @@ void RAUtil::DoAttestation(sgx_enclave_id_t eidSGX, sgx_ra_context_t& raCtx,
     // send msg0 and msg1 to the client for verification
     this->SendMsg01RevMsg2(msg0_extended_epid_group_id, msg1, msg2,
         newClientConnection);
-
+    
     uint32_t msg3Size = 0;
     sgxStatus = sgx_ra_proc_msg2(raCtx, eidSGX, sgx_ra_proc_msg2_trusted,
         sgx_ra_get_msg3_trusted, &msg2, sizeof(sgx_ra_msg2_t) + msg2.sig_rl_size,
@@ -102,7 +101,7 @@ void RAUtil::DoAttestation(sgx_enclave_id_t eidSGX, sgx_ra_context_t& raCtx,
         tool::PrintBinaryArray((uint8_t*)&msg3->mac, sizeof(msg3->mac));
     }
 
-    // send msg3 to the client
+    // send msg3 to the client 
     ra_msg4_t msg4;
     this->SendMsg3(msg3, msg3Size, msg4, newClientConnection);
     free(msg3);
@@ -124,12 +123,11 @@ void RAUtil::DoAttestation(sgx_enclave_id_t eidSGX, sgx_ra_context_t& raCtx,
     totalTime = tool::GetTimeDiff(sTime, eTime);
     tool::Logging(myName_.c_str(), "total RA time: %lf\n", totalTime);
 #endif
-    return;
+    return ;
 }
 
 void RAUtil::SendMsg01RevMsg2(uint32_t extendedEPIDGroupID, sgx_ra_msg1_t& msg1,
-    sgx_ra_msg2_t& msg2, SSL* newClientConnection)
-{
+    sgx_ra_msg2_t& msg2, SSL* newClientConnection) {
     NetworkHead_t requestBody;
     requestBody.messageType = SGX_RA_MSG01;
     requestBody.dataSize = sizeof(extendedEPIDGroupID) + sizeof(msg1);
@@ -152,7 +150,7 @@ void RAUtil::SendMsg01RevMsg2(uint32_t extendedEPIDGroupID, sgx_ra_msg1_t& msg1,
         exit(EXIT_FAILURE);
     }
 
-    // wait the response from the client
+    // wait the response from the client 
     uint8_t responseBuffer[MAX_SGX_MESSAGE_SIZE];
     uint32_t recvSize = 0;
     if (!dataSecureChannel_->ReceiveData(newClientConnection, responseBuffer, recvSize)) {
@@ -160,7 +158,7 @@ void RAUtil::SendMsg01RevMsg2(uint32_t extendedEPIDGroupID, sgx_ra_msg1_t& msg1,
         exit(EXIT_FAILURE);
     }
 
-    NetworkHead_t responseBody;
+    NetworkHead_t responseBody; 
     responseBody.messageType = 0;
     responseBody.dataSize = 0;
     memcpy(&responseBody, responseBuffer, sizeof(NetworkHead_t));
@@ -171,15 +169,15 @@ void RAUtil::SendMsg01RevMsg2(uint32_t extendedEPIDGroupID, sgx_ra_msg1_t& msg1,
     }
 
     // copy the data to the msg2 buffer
-    memcpy(&msg2, responseBuffer + sizeof(NetworkHead_t),
+    memcpy(&msg2, responseBuffer + sizeof(NetworkHead_t), 
         recvSize - sizeof(NetworkHead_t));
 
-    return;
+    return ;
 }
 
+
 void RAUtil::SendMsg3(sgx_ra_msg3_t* msg3, uint32_t msg3Size, ra_msg4_t& msg4,
-    SSL* newClientConnection)
-{
+    SSL* newClientConnection) {
     NetworkHead_t requestBody;
     requestBody.messageType = SGX_RA_MSG3;
     requestBody.dataSize = msg3Size;
@@ -188,7 +186,7 @@ void RAUtil::SendMsg3(sgx_ra_msg3_t* msg3, uint32_t msg3Size, ra_msg4_t& msg4,
     size_t totalSendSize = sizeof(NetworkHead_t) + requestBody.dataSize;
     uint8_t requestBuffer[MAX_SGX_MESSAGE_SIZE];
 
-    // copy to the request buffer
+    // copy to the request buffer 
     memcpy(requestBuffer + offset, &requestBody, sizeof(NetworkHead_t));
     offset += sizeof(NetworkHead_t);
     memcpy(requestBuffer + offset, msg3, msg3Size);
@@ -207,7 +205,7 @@ void RAUtil::SendMsg3(sgx_ra_msg3_t* msg3, uint32_t msg3Size, ra_msg4_t& msg4,
         exit(EXIT_FAILURE);
     }
 
-    NetworkHead_t responseBody;
+    NetworkHead_t responseBody; 
     responseBody.messageType = 0;
     responseBody.dataSize = 0;
     memcpy(&responseBody, responseBuffer, sizeof(NetworkHead_t));
@@ -218,8 +216,8 @@ void RAUtil::SendMsg3(sgx_ra_msg3_t* msg3, uint32_t msg3Size, ra_msg4_t& msg4,
     }
 
     // copy the data to the msg2 buffer
-    memcpy(&msg4, responseBuffer + sizeof(NetworkHead_t),
+    memcpy(&msg4, responseBuffer + sizeof(NetworkHead_t), 
         sizeof(ra_msg4_t));
 
-    return;
+    return ;
 }

@@ -1,32 +1,31 @@
 /**
  * @file ecallStorage.cc
  * @author Zuoru YANG (zryang@cse.cuhk.edu.hk)
- * @brief implement the interface of storage core inside the enclave
+ * @brief implement the interface of storage core inside the enclave 
  * @version 0.1
  * @date 2020-12-16
- *
+ * 
  * @copyright Copyright (c) 2020
- *
+ * 
  */
 
 #include "../../include/ecallStorage.h"
 
 /**
  * @brief Construct a new Ecall Storage Core object
- *
+ * 
  */
-EcallStorageCore::EcallStorageCore()
-{
+EcallStorageCore::EcallStorageCore() {
     cryptoObj_ = new EcallCrypto(CIPHER_TYPE, HASH_TYPE);
-    // Enclave::Logging(myName_.c_str(), "init the StorageCore.\n");
+    //Enclave::Logging(myName_.c_str(), "init the StorageCore.\n");
+    
 }
 
-/**
+ /**
  * @brief Destroy the Ecall Storage Core object
- *
+ * 
  */
-EcallStorageCore::~EcallStorageCore()
-{
+EcallStorageCore::~EcallStorageCore() {
     delete cryptoObj_;
     // Enclave::Logging(myName_.c_str(), "========StorageCore Info========\n");
     // Enclave::Logging(myName_.c_str(), "write the data size: %lu\n", writtenDataSize_);
@@ -36,7 +35,7 @@ EcallStorageCore::~EcallStorageCore()
 
 /**
  * @brief save the chunk to the storage serve
- *
+ * 
  * @param chunkData the chunk data buffer
  * @param chunkSize the chunk size
  * @param chunkAddr the chunk address (return)
@@ -44,8 +43,7 @@ EcallStorageCore::~EcallStorageCore()
  * @param upOutSGX the pointer to outside SGX buffer
  */
 void EcallStorageCore::SaveChunk(char* chunkData, uint32_t chunkSize,
-    uint8_t* containerName, UpOutSGX_t* upOutSGX, uint8_t* chunkHash)
-{
+    uint8_t* containerName, UpOutSGX_t* upOutSGX, uint8_t* chunkHash) {
     // assign a chunk length
     EnclaveClient* sgxClient = (EnclaveClient*)upOutSGX->sgxClient;
     InContainer* inContainer = &sgxClient->_inContainer;
@@ -68,7 +66,7 @@ void EcallStorageCore::SaveChunk(char* chunkData, uint32_t chunkSize,
 
         cryptoObj_->EncryptWithKey(cipherCtx, inContainer->headerBuf,
             inContainer->curHeaderSize, Enclave::indexQueryKey_, outContainer->body + 4);
-
+        
         memcpy(outContainer->body + 4 + inContainer->curHeaderSize, inContainer->contentBuf, inContainer->curContentSize);
         outContainer->currentSize = 4 + inContainer->curHeaderSize + inContainer->curContentSize;
         Ocall_WriteContainer(upOutSGX->outClient);
@@ -102,19 +100,19 @@ void EcallStorageCore::SaveChunk(char* chunkData, uint32_t chunkSize,
     memcpy(inContainer->headerBuf + headerWriteOffset, offsetChar, 4);
     headerWriteOffset += 4;
     memcpy(inContainer->headerBuf + headerWriteOffset, lengthChar, 4);
-
+    
     // 修改headerSize
     inContainer->curHeaderSize += CHUNK_HASH_SIZE + 8;
-
+    
     // 写content
     memcpy(inContainer->contentBuf + contentWriteOffset, chunkData, chunkSize);
-
+    
     // 修改contentSize
     inContainer->curContentSize += chunkSize;
-
+    
     // 复制回containerName
     memcpy(containerName, outContainer->containerID, CONTAINER_ID_LENGTH);
-
+    
     // curNum+1
     inContainer->curNum += 1;
 
@@ -125,8 +123,7 @@ void EcallStorageCore::SaveChunk(char* chunkData, uint32_t chunkSize,
 }
 
 void EcallStorageCore::SaveChunk_RT(char* chunkData, uint32_t chunkSize,
-    uint8_t* containerName, RtOutSGX_t* rtOutSGX, uint8_t* chunkHash)
-{
+    uint8_t* containerName, RtOutSGX_t* rtOutSGX, uint8_t* chunkHash) {
     // assign a chunk length
     EnclaveClient* sgxClient = (EnclaveClient*)rtOutSGX->sgxClient;
     InContainer* inContainer = &sgxClient->_inContainer_RT;
@@ -148,7 +145,7 @@ void EcallStorageCore::SaveChunk_RT(char* chunkData, uint32_t chunkSize,
 
         cryptoObj_->EncryptWithKey(cipherCtx, inContainer->headerBuf,
             inContainer->curHeaderSize, Enclave::indexQueryKey_, outContainer->body + 4);
-
+        
         memcpy(outContainer->body + 4 + inContainer->curHeaderSize, inContainer->contentBuf, inContainer->curContentSize);
         outContainer->currentSize = 4 + inContainer->curHeaderSize + inContainer->curContentSize;
         Ocall_WriteContainerRT(rtOutSGX->outClient);
@@ -182,19 +179,19 @@ void EcallStorageCore::SaveChunk_RT(char* chunkData, uint32_t chunkSize,
     memcpy(inContainer->headerBuf + headerWriteOffset, offsetChar, 4);
     headerWriteOffset += 4;
     memcpy(inContainer->headerBuf + headerWriteOffset, lengthChar, 4);
-
+    
     // 修改headerSize
     inContainer->curHeaderSize += CHUNK_HASH_SIZE + 8;
-
+    
     // 写content
     memcpy(inContainer->contentBuf + contentWriteOffset, chunkData, chunkSize);
-
+    
     // 修改contentSize
     inContainer->curContentSize += chunkSize;
-
+    
     // 复制回containerName
     memcpy(containerName, outContainer->containerID, CONTAINER_ID_LENGTH);
-
+    
     // curNum+1
     inContainer->curNum += 1;
 
@@ -204,9 +201,10 @@ void EcallStorageCore::SaveChunk_RT(char* chunkData, uint32_t chunkSize,
     return;
 }
 
+
+
 void EcallStorageCore::SaveChunk_GC(char* chunkData, uint32_t chunkSize,
-    uint8_t* containerName, GcOutSGX_t* gcOutSGX, uint8_t* chunkHash)
-{
+    uint8_t* containerName, GcOutSGX_t* gcOutSGX, uint8_t* chunkHash) {
     // assign a chunk length
     EnclaveClient* sgxClient = (EnclaveClient*)gcOutSGX->sgxClient;
     InContainer* inContainer = &sgxClient->_inContainer_GC;
@@ -228,7 +226,7 @@ void EcallStorageCore::SaveChunk_GC(char* chunkData, uint32_t chunkSize,
 
         cryptoObj_->EncryptWithKey(cipherCtx, inContainer->headerBuf,
             inContainer->curHeaderSize, Enclave::indexQueryKey_, outContainer->body + 4);
-
+        
         memcpy(outContainer->body + 4 + inContainer->curHeaderSize, inContainer->contentBuf, inContainer->curContentSize);
         outContainer->currentSize = 4 + inContainer->curHeaderSize + inContainer->curContentSize;
         Ocall_WriteContainerGC(gcOutSGX->outClient);
@@ -262,19 +260,19 @@ void EcallStorageCore::SaveChunk_GC(char* chunkData, uint32_t chunkSize,
     memcpy(inContainer->headerBuf + headerWriteOffset, offsetChar, 4);
     headerWriteOffset += 4;
     memcpy(inContainer->headerBuf + headerWriteOffset, lengthChar, 4);
-
+    
     // 修改headerSize
     inContainer->curHeaderSize += CHUNK_HASH_SIZE + 8;
-
+    
     // 写content
     memcpy(inContainer->contentBuf + contentWriteOffset, chunkData, chunkSize);
-
+    
     // 修改contentSize
     inContainer->curContentSize += chunkSize;
-
+    
     // 复制回containerName
     memcpy(containerName, outContainer->containerID, CONTAINER_ID_LENGTH);
-
+    
     // curNum+1
     inContainer->curNum += 1;
 

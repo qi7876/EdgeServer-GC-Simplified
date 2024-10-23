@@ -13,46 +13,47 @@
 #define SERVER_OPT_THREAD_H
 
 // for upload
-#include "absIndex.h"
-#include "dataReceiver.h"
 #include "dataWriter.h"
+#include "dataReceiver.h"
+#include "absIndex.h"
 #include "enclaveIndex.h"
 
 // for basic build block
-#include "absDatabase.h"
-#include "clientVar.h"
-#include "configure.h"
 #include "factoryDatabase.h"
+#include "absDatabase.h"
+#include "configure.h"
+#include "clientVar.h"
 #include "raUtil.h"
 
 // for restore
-#include "enclaveMigrator.h"
 #include "enclaveRecvDecoder.h"
+#include "enclaveMigrator.h"
 
 extern Configure config;
-class ServerOptThread {
+class ServerOptThread
+{
 private:
     string myName_ = "ServerOptThread";
     string logFileName_ = "server-log";
 
     // handlers passed from outside
-    SSLConnection* dataSecureChannel_;
-    AbsDatabase* fp2ChunkDB_;
+    SSLConnection *dataSecureChannel_;
+    AbsDatabase *fp2ChunkDB_;
 
     // for RA
-    RAUtil* raUtil_;
+    RAUtil *raUtil_;
 
     // for upload
-    DataReceiver* dataReceiverObj_;
-    AbsIndex* absIndexObj_;
-    DataWriter* dataWriterObj_;
-    StorageCore* storageCoreObj_;
+    DataReceiver *dataReceiverObj_;
+    AbsIndex *absIndexObj_;
+    DataWriter *dataWriterObj_;
+    StorageCore *storageCoreObj_;
 
     // for restore
-    EnclaveRecvDecoder* recvDecoderObj_;
+    EnclaveRecvDecoder *recvDecoderObj_;
 
     // for migration
-    EnclaveMigrator* enclaveMigrationObj_;
+    EnclaveMigrator *enclaveMigrationObj_;
     vector<string> uploadFileList;
 
     // for SGX related
@@ -69,7 +70,7 @@ private:
     int tmpMigratedNum_ = 0;
 
     // store the client information
-    unordered_map<int, boost::mutex*> clientLockIndex_;
+    unordered_map<int, boost::mutex *> clientLockIndex_;
 
     // for log file
     ofstream logFile_;
@@ -84,7 +85,7 @@ private:
      * @return true success
      * @return false fail
      */
-    bool CheckFileStatus(string& fullRecipePath, int optType);
+    bool CheckFileStatus(string &fullRecipePath, int optType);
 
 public:
     /**
@@ -95,8 +96,8 @@ public:
      * @param eidSGX sgx enclave id
      * @param indexType index type
      */
-    ServerOptThread(SSLConnection* dataSecureChannel, AbsDatabase* fp2ChunkDB,
-        sgx_enclave_id_t eidSGX, int indexType);
+    ServerOptThread(SSLConnection *dataSecureChannel, AbsDatabase *fp2ChunkDB,
+                    sgx_enclave_id_t eidSGX, int indexType);
 
     /**
      * @brief Destroy the Server Opt Thread object
@@ -109,7 +110,7 @@ public:
      *
      * @param clientSSL the client ssl
      */
-    void Run(SSL* clientSSL, int migrateFileNum);
+    void Run(SSL *clientSSL, int migrateFileNum);
 
     void GarbageCollection();
 };

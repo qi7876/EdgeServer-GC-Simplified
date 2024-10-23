@@ -4,9 +4,9 @@
  * @brief define the necessary data structure in deduplication
  * @version 0.1
  * @date 2019-12-19
- *
+ * 
  * @copyright Copyright (c) 2019
- *
+ * 
  */
 
 #ifndef BASICDEDUP_CHUNK_h
@@ -39,20 +39,20 @@ typedef struct {
 } SegmentMeta_t;
 
 typedef struct {
-    uint32_t chunkNum;
-    uint32_t segmentSize;
-    uint32_t minHashVal;
-    uint8_t minHash[CHUNK_HASH_SIZE];
-    uint8_t* buffer;
-    SegmentMeta_t* metadata;
+   uint32_t chunkNum; 
+   uint32_t segmentSize;
+   uint32_t minHashVal;
+   uint8_t minHash[CHUNK_HASH_SIZE];
+   uint8_t* buffer;
+   SegmentMeta_t* metadata;
 } Segment_t;
 
 typedef struct {
-    uint8_t chunkHash[CHUNK_HASH_SIZE];
+    uint8_t chunkHash[CHUNK_HASH_SIZE]; 
 } RecipeEntry_t;
 
 typedef struct {
-    uint8_t mleKey[MLE_KEY_SIZE];
+    uint8_t mleKey[MLE_KEY_SIZE]; 
 } keyRecipeEntry_t;
 
 typedef struct {
@@ -104,13 +104,13 @@ typedef struct {
 } EnclaveRecipeEntry_t;
 
 typedef struct {
-    uint8_t containerName[CONTAINER_ID_LENGTH];
+    uint8_t containerName[CONTAINER_ID_LENGTH]; 
     uint32_t offset;
 } CacheIndex_t;
 
 typedef struct {
     char containerID[CONTAINER_ID_LENGTH];
-    uint8_t body[MAX_CONTAINER_SIZE];
+    uint8_t body[MAX_CONTAINER_SIZE]; 
     uint32_t currentSize;
 } Container_t;
 
@@ -128,29 +128,29 @@ typedef struct {
     uint8_t secureChunkHash[CHUNK_HASH_SIZE];
     uint32_t chunkFreq;
     uint32_t idx;
-} HeapItem_t;
+} HeapItem_t; 
 
 typedef struct {
-    uint8_t dedupFlag; // true: for duplicate, false: for unique
+    uint8_t dedupFlag; // true: for duplicate, false: for unique 
     uint8_t secureChunkHash[CHUNK_HASH_SIZE];
     uint8_t chunkHash[CHUNK_HASH_SIZE];
-    uint8_t containerName[CONTAINER_ID_LENGTH];
+    uint8_t containerName[CONTAINER_ID_LENGTH]; 
 } OutQueryEntry_t; // returned by the outside application for query
 
 typedef struct {
-    uint8_t dedupFlag; // true: for duplicate, false: for unique
+    uint8_t dedupFlag; // true: for duplicate, false: for unique 
     uint8_t chunkHash[CHUNK_HASH_SIZE];
     uint8_t secureChunkHash[CHUNK_HASH_SIZE];
-    uint8_t containerName[CONTAINER_ID_LENGTH];
+    uint8_t containerName[CONTAINER_ID_LENGTH]; 
     uint8_t mleKey[MLE_KEY_SIZE];
-    uint32_t entryOffset;
+    uint32_t entryOffset; 
     uint32_t chunkFreq;
     uint32_t chunkSize;
 } InQueryEntry_t; // returned by the outside application for query
 
 typedef struct {
     uint8_t chunkHash[CHUNK_HASH_SIZE];
-    uint8_t containerName[CONTAINER_ID_LENGTH];
+    uint8_t containerName[CONTAINER_ID_LENGTH]; 
 } OutRestoreEntry_t; // returned by the outside application for query
 
 typedef struct {
@@ -160,9 +160,9 @@ typedef struct {
 
 typedef struct {
     uint8_t chunkHash[CHUNK_HASH_SIZE];
-    uint8_t containerName[CONTAINER_ID_LENGTH];
+    uint8_t containerName[CONTAINER_ID_LENGTH]; 
     uint8_t mleKey[MLE_KEY_SIZE];
-    uint32_t chunkOffset;
+    uint32_t chunkOffset; 
     uint32_t chunkSize;
     uint32_t containerID;
 } InRestoreEntry_t; // returned by the outside application for query
@@ -198,9 +198,9 @@ typedef struct {
 
 typedef struct _ra_msg4_struct {
     uint8_t status; // true: 1, false: 0
-    // sgx_platform_info_t platformInfoBlob;
+    //sgx_platform_info_t platformInfoBlob;
 } ra_msg4_t;
-
+ 
 typedef struct {
     uint8_t* secret;
     size_t length;
@@ -218,8 +218,8 @@ typedef struct {
 
 typedef struct {
     uint8_t chunkHash[CHUNK_HASH_SIZE];
-    uint8_t containerName[CONTAINER_ID_LENGTH];
-    uint32_t chunkOffset;
+    uint8_t containerName[CONTAINER_ID_LENGTH]; 
+    uint32_t chunkOffset; 
     uint32_t chunkSize;
     uint32_t containerID;
 } InMigrationEntry_t;
@@ -254,8 +254,8 @@ typedef struct {
 
 typedef struct {
     uint8_t chunkHash[CHUNK_HASH_SIZE];
-    uint8_t containerName[CONTAINER_ID_LENGTH];
-    uint32_t chunkOffset;
+    uint8_t containerName[CONTAINER_ID_LENGTH]; 
+    uint32_t chunkOffset; 
     uint32_t chunkSize;
     uint32_t containerID;
 } InGCEntry_t;
@@ -264,7 +264,7 @@ typedef struct {
     uint32_t existFlag;
     uint8_t chunkHash[CHUNK_HASH_SIZE];
     uint8_t secureChunkHash[CHUNK_HASH_SIZE];
-    uint8_t containerName[CONTAINER_ID_LENGTH];
+    uint8_t containerName[CONTAINER_ID_LENGTH]; 
 } OutGCEntry_t;
 
 typedef struct {
@@ -281,4 +281,5 @@ typedef struct {
     void* sgxClient;
 } GcOutSGX_t;
 
-#endif // BASICDEDUP_CHUNK_h
+
+#endif //BASICDEDUP_CHUNK_h

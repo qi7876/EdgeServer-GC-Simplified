@@ -1,55 +1,52 @@
 /**
  * @file enclaveBase.cc
  * @author Zuoru YANG (zryang@cse.cuhk.edu.hk)
- * @brief implement the interface of the base of enclave
+ * @brief implement the interface of the base of enclave 
  * @version 0.1
  * @date 2020-12-28
- *
+ * 
  * @copyright Copyright (c) 2020
- *
+ * 
  */
 
 #include "../../include/enclaveBase.h"
 
 /**
  * @brief Construct a new Enclave Base object
- *
+ * 
  */
-EnclaveBase::EnclaveBase()
-{
+EnclaveBase::EnclaveBase() {
     // store the share parameter
     maxSegmentChunkNum_ = MAX_SEGMENT_SIZE / MIN_CHUNK_SIZE;
 
-    // the new object
+    // the new object 
     storageCoreObj_ = new EcallStorageCore();
     cryptoObj_ = new EcallCrypto(CIPHER_TYPE, HASH_TYPE);
-    ///
+    /// 
 
-    // Enclave::Logging(myName_.c_str(), "init the EnclaveBase.\n");
+    //Enclave::Logging(myName_.c_str(), "init the EnclaveBase.\n");
 }
 
 /**
  * @brief Destroy the Enclave Base object
- *
+ * 
  */
-EnclaveBase::~EnclaveBase()
-{
+EnclaveBase::~EnclaveBase() {
     delete storageCoreObj_;
     delete cryptoObj_;
 }
 
 /**
  * @brief identify whether it is the end of a segment
- *
+ * 
  * @param chunkHashVal the input chunk hash
  * @param chunkSize the input chunk size
  * @param segment the reference to current segment
  * @return true is the end
- * @return false is not the end
+ * @return false is not the end 
  */
-bool EnclaveBase::IsEndOfSegment(uint32_t chunkHashVal, uint32_t chunkSize,
-    Segment_t* segment)
-{
+bool EnclaveBase::IsEndOfSegment(uint32_t chunkHashVal, uint32_t chunkSize, 
+    Segment_t* segment) {
     // step-1: judge the number of chunks in this segment
     if (segment->chunkNum + 1 > maxSegmentChunkNum_) {
         // exceed the max allow number of chunks
@@ -77,12 +74,11 @@ bool EnclaveBase::IsEndOfSegment(uint32_t chunkHashVal, uint32_t chunkSize,
 
 /**
  * @brief convert hash to a value
- *
+ * 
  * @param inputHash the input chunk hash
  * @return uint32_t the returned value
  */
-uint32_t EnclaveBase::ConvertHashToValue(const uint8_t* inputHash)
-{
+uint32_t EnclaveBase::ConvertHashToValue(const uint8_t* inputHash) {
     uint32_t hashVal = 0;
     for (size_t i = 0; i < CHUNK_HASH_SIZE; i++) {
         hashVal += inputHash[i];
@@ -92,27 +88,26 @@ uint32_t EnclaveBase::ConvertHashToValue(const uint8_t* inputHash)
 
 /**
  * @brief update the file recipe
- *
+ * 
  * @param chunkAddrStr the chunk address string
  * @param inRecipe the in-enclave recipe buffer
  * @param upOutSGX the upload out-enclave var
  */
-void EnclaveBase::UpdateFileRecipe(InQueryEntry_t* entry, Recipe_t* inRecipe,
-    Recipe_t* inSecureRecipe, Recipe_t* inKeyRecipe, UpOutSGX_t* upOutSGX)
-{
-
+void EnclaveBase::UpdateFileRecipe(InQueryEntry_t* entry, Recipe_t* inRecipe, 
+    Recipe_t* inSecureRecipe, Recipe_t* inKeyRecipe, UpOutSGX_t* upOutSGX) {
+    
     // 写入recipe
-    memcpy(inRecipe->entryList + inRecipe->recipeNum * CHUNK_HASH_SIZE,
+    memcpy(inRecipe->entryList + inRecipe->recipeNum * CHUNK_HASH_SIZE, 
         entry->chunkHash, CHUNK_HASH_SIZE);
-    memcpy(inSecureRecipe->entryList + inRecipe->recipeNum * CHUNK_HASH_SIZE,
+    memcpy(inSecureRecipe->entryList + inRecipe->recipeNum * CHUNK_HASH_SIZE, 
         entry->secureChunkHash, CHUNK_HASH_SIZE);
-    memcpy(inKeyRecipe->entryList + inRecipe->recipeNum * MLE_KEY_SIZE,
+    memcpy(inKeyRecipe->entryList + inRecipe->recipeNum * MLE_KEY_SIZE, 
         entry->mleKey, MLE_KEY_SIZE);
     inRecipe->recipeNum++;
 
     // 如果recipe满，Ocall更新recipe
     if ((inRecipe->recipeNum % Enclave::sendRecipeBatchSize_) == 0) {
-        // in-enclave info
+        // in-enclave info 
         EnclaveClient* sgxClient = (EnclaveClient*)upOutSGX->sgxClient;
         EVP_CIPHER_CTX* cipherCtx = sgxClient->_cipherCtx;
         uint8_t* masterKey = sgxClient->_masterKey;
@@ -124,35 +119,34 @@ void EnclaveBase::UpdateFileRecipe(InQueryEntry_t* entry, Recipe_t* inRecipe,
 
         // start to encrypt the file recipe with the enclave key
         cryptoObj_->EncryptWithKey(cipherCtx, inRecipe->entryList,
-            inRecipe->recipeNum * CHUNK_HASH_SIZE, Enclave::indexQueryKey_,
+            inRecipe->recipeNum * CHUNK_HASH_SIZE, Enclave::indexQueryKey_, 
             outRecipe->entryList);
         // cryptoObj_->EncryptWithKey(cipherCtx, inSecureRecipe->entryList,
-        //     inRecipe->recipeNum * CHUNK_HASH_SIZE, Enclave::indexQueryKey_,
+        //     inRecipe->recipeNum * CHUNK_HASH_SIZE, Enclave::indexQueryKey_, 
         //     outSecureRecipe->entryList);
         memcpy(outSecureRecipe->entryList, inSecureRecipe->entryList, inRecipe->recipeNum * CHUNK_HASH_SIZE);
         cryptoObj_->EncryptWithKey(cipherCtx, inKeyRecipe->entryList,
-            inRecipe->recipeNum * MLE_KEY_SIZE, masterKey,
+            inRecipe->recipeNum * MLE_KEY_SIZE, masterKey, 
             outKeyRecipe->entryList);
         outRecipe->recipeNum = inRecipe->recipeNum;
         Ocall_UpdateFileRecipe(upOutSGX->outClient);
         inRecipe->recipeNum = 0;
     }
 
-    return;
+    return ;
 }
 
 /**
  * @brief process an unique chunk
- *
+ * 
  * @param chunkAddr the chunk address
  * @param chunkBuffer the chunk buffer
  * @param chunkSize the chunk size
  * @param upOutSGX the upload out-enclave var
  */
-void EnclaveBase::ProcessUniqueChunk(uint8_t* containerName, uint8_t* chunkBuffer,
-    uint32_t chunkSize, UpOutSGX_t* upOutSGX,
-    uint8_t* mleKey, uint8_t* chunkHash, uint8_t* secureChunkHash)
-{
+void EnclaveBase::ProcessUniqueChunk(uint8_t* containerName, uint8_t* chunkBuffer, 
+    uint32_t chunkSize, UpOutSGX_t* upOutSGX, 
+    uint8_t* mleKey, uint8_t* chunkHash, uint8_t* secureChunkHash) {
     EnclaveClient* sgxClient = (EnclaveClient*)upOutSGX->sgxClient;
     // uint8_t* currentIV = sgxClient->PickNewIV();
     EVP_CIPHER_CTX* cipher = sgxClient->_cipherCtx;
@@ -170,10 +164,10 @@ void EnclaveBase::ProcessUniqueChunk(uint8_t* containerName, uint8_t* chunkBuffe
     _compressTime += (_endTime - _startTime);
     _compressCount++;
 #endif
-
+    
 #if (SGX_BREAKDOWN == 1)
     Ocall_GetCurrentTime(&_startTime);
-#endif
+#endif 
     if (tmpCompressedChunkSize > 0) {
         // it can be compressed
         _compressedDataSize += tmpCompressedChunkSize;
@@ -190,13 +184,14 @@ void EnclaveBase::ProcessUniqueChunk(uint8_t* containerName, uint8_t* chunkBuffe
         // do encryption
         cryptoObj_->EncryptWithKey(cipher, chunkBuffer, tmpCompressedChunkSize, mleKey,
             tmpCipherChunk);
-    }
+
+    }   
 #if (SGX_BREAKDOWN == 1)
     Ocall_GetCurrentTime(&_endTime);
     _encryptTime += (_endTime - _startTime);
-    _encryptCount++;
+    _encryptCount++; 
 #endif
-
+    
     // generate secure hash
     EVP_MD_CTX* mdCtx = sgxClient->_mdCtx;
     cryptoObj_->GenerateHash(mdCtx, tmpCipherChunk,
@@ -204,47 +199,46 @@ void EnclaveBase::ProcessUniqueChunk(uint8_t* containerName, uint8_t* chunkBuffe
     // /Enclave::PrintBinaryBuffer(secureChunkHash, CHUNK_HASH_SIZE);
 
     // finish the encryption, assign this a container
-    storageCoreObj_->SaveChunk((char*)tmpCipherChunk, tmpCompressedChunkSize,
+    storageCoreObj_->SaveChunk((char*)tmpCipherChunk, tmpCompressedChunkSize, 
         containerName, upOutSGX, chunkHash);
-    return;
+    return ;
 }
+
 
 /**
  * @brief update the index store
- *
- * @param key the key of the k-v pair
- * @param buffer the data buffer
+ * 
+ * @param key the key of the k-v pair 
+ * @param buffer the data buffer 
  * @param bufferSize the size of the buffer
  * @return true success
  * @return false fail
  */
-bool EnclaveBase::UpdateIndexStore(const string& key, const char* buffer,
-    size_t bufferSize)
-{
+bool EnclaveBase::UpdateIndexStore(const string& key, const char* buffer, 
+    size_t bufferSize) {
     bool status;
-    Ocall_UpdateIndexStoreBuffer(&status, key.c_str(), key.size(),
+    Ocall_UpdateIndexStoreBuffer(&status, key.c_str(), key.size(), 
         (const uint8_t*)buffer, bufferSize);
     return status;
 }
 
 /**
  * @brief read the information from the index store
- *
- * @param key key
+ * 
+ * @param key key 
  * @param value value
  * @param upOutSGX the upload out-enclave var
- * @return true
- * @return false
+ * @return true 
+ * @return false 
  */
 bool EnclaveBase::ReadIndexStore(const string& key, string& value,
-    UpOutSGX_t* upOutSGX)
-{
+    UpOutSGX_t* upOutSGX) {
     bool status;
     size_t expectedBufferSize = 0;
     uint8_t* bufferPtr;
     Ocall_ReadIndexStore(&status, key.c_str(), key.size(), &bufferPtr,
         &expectedBufferSize, upOutSGX->outClient);
-
+    
     // copy the buffer to the string
     value.assign((const char*)bufferPtr, expectedBufferSize);
     return status;
@@ -252,26 +246,24 @@ bool EnclaveBase::ReadIndexStore(const string& key, string& value,
 
 /**
  * @brief Get the Time Differ object
- *
+ * 
  * @param sTime the start time
  * @param eTime the end time
- * @return double the diff of time
+ * @return double the diff of time 
  */
-double EnclaveBase::GetTimeDiffer(uint64_t sTime, uint64_t eTime)
-{
+double EnclaveBase::GetTimeDiffer(uint64_t sTime, uint64_t eTime) {
     double second = (eTime - sTime) / SEC_TO_USEC;
     return second;
 }
 
 /**
  * @brief reset the value of current segment
- *
+ * 
  * @param sgxClient the to the current client
  */
-void EnclaveBase::ResetCurrentSegment(EnclaveClient* sgxClient)
-{
+void EnclaveBase::ResetCurrentSegment(EnclaveClient* sgxClient) {
     sgxClient->_segment.chunkNum = 0;
     sgxClient->_segment.minHashVal = UINT32_MAX;
     sgxClient->_segment.segmentSize = 0;
-    return;
+    return ;
 }

@@ -1,30 +1,31 @@
 /**
  * @file RAVerifier.h
  * @author Zuoru YANG (zryang@cse.cuhk.edu.hk)
- * @brief define the interfaces RA verifier
+ * @brief define the interfaces RA verifier 
  * @version 0.1
  * @date 2021-05-22
- *
+ * 
  * @copyright Copyright (c) 2021
- *
+ * 
  */
+
 
 #ifndef RA_VERIFIER_H
 #define RA_VERIFIER_H
 
-#include "chunkStructure.h"
 #include "configure.h"
-#include "cryptoPrimitive.h"
 #include "define.h"
+#include "chunkStructure.h"
 #include "sslConnection.h"
+#include "cryptoPrimitive.h"
 
 // for RA verification
 #include "IAS/base64.h"
 #include "IAS/byteorder.h"
-#include "IAS/crypto.h"
-#include "IAS/hexutil.h"
-#include "IAS/iasrequest.h"
 #include "IAS/json.h"
+#include "IAS/crypto.h"
+#include "IAS/iasrequest.h"
+#include "IAS/hexutil.h"
 
 #include "sgx_quote.h"
 
@@ -58,45 +59,45 @@ static const unsigned char def_service_private_key[32] = {
 extern Configure config;
 
 class RAVerifier {
-private:
-    SSLConnection* dataSecureChannel_;
+    private:
+        SSLConnection* dataSecureChannel_;
 
-    void ProcessMsg01(EnclaveSession_t& enclaveSession, SGX_Msg01_t& recvMsg01,
-        sgx_ra_msg2_t& msg2);
+        void ProcessMsg01(EnclaveSession_t& enclaveSession, SGX_Msg01_t& recvMsg01,
+            sgx_ra_msg2_t& msg2);
 
-    void ProcessMsg3(EnclaveSession_t& enclaveSession, sgx_ra_msg3_t* msg3,
-        ra_msg4_t& msg4, uint32_t quote_sz);
+        void ProcessMsg3(EnclaveSession_t& enclaveSession, sgx_ra_msg3_t* msg3,
+            ra_msg4_t& msg4, uint32_t quote_sz);
+        
+        void DeriveKDK(EVP_PKEY* Gb, uint8_t* kdk, sgx_ec256_public_t g_a);
 
-    void DeriveKDK(EVP_PKEY* Gb, uint8_t* kdk, sgx_ec256_public_t g_a);
+        void GetSigrl(uint8_t* gid, char* sig_rl, uint32_t* sig_rl_size);
 
-    void GetSigrl(uint8_t* gid, char* sig_rl, uint32_t* sig_rl_size);
+        void GetAttestationReport(const char* b64quote, sgx_ps_sec_prop_desc_t secprop,
+            ra_msg4_t* msg4);
 
-    void GetAttestationReport(const char* b64quote, sgx_ps_sec_prop_desc_t secprop,
-        ra_msg4_t* msg4);
+        bool verbose_;
 
-    bool verbose_;
+        // for RA configuration
+        sgx_spid_t spid_;
+        uint16_t quoteType_;
+        IAS_Connection* iasConnection_;
 
-    // for RA configuration
-    sgx_spid_t spid_;
-    uint16_t quoteType_;
-    IAS_Connection* iasConnection_;
+        X509_STORE* caStore_;
+        X509* signingCA_;
+        EVP_PKEY* servicePrivateKey_;
+        uint16_t iasVersion_;
 
-    X509_STORE* caStore_;
-    X509* signingCA_;
-    EVP_PKEY* servicePrivateKey_;
-    uint16_t iasVersion_;
+        CryptoPrimitive* cryptoObj_;
+        EVP_MD_CTX* mdCtx_;
+        EVP_CIPHER_CTX* cipherCtx_;
+        EnclaveSession_t currentSession_;
 
-    CryptoPrimitive* cryptoObj_;
-    EVP_MD_CTX* mdCtx_;
-    EVP_CIPHER_CTX* cipherCtx_;
-    EnclaveSession_t currentSession_;
+    public:
+        RAVerifier(SSLConnection* dataSecureChannel);
 
-public:
-    RAVerifier(SSLConnection* dataSecureChannel);
+        ~RAVerifier();
 
-    ~RAVerifier();
-
-    void RAVerification(SSL* connectionForServer, EnclaveSession_t& newSession);
+        void RAVerification(SSL* connectionForServer, EnclaveSession_t& newSession);
 };
 
 #endif

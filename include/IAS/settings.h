@@ -4,11 +4,11 @@
 /*----------------------------------------------------------------------
  * IAS API version
  *----------------------------------------------------------------------
- * Default API version to use when querying IAS.
+ * Default API version to use when querying IAS. 
  *
  * This can be overriden by the -r option to sp.
  */
-#define IAS_API_DEF_VERSION 3
+#define IAS_API_DEF_VERSION    3 
 
 /*----------------------------------------------------------------------
  * CA Certificate Bundles
@@ -25,9 +25,10 @@
 
 /* Default CA bundle file on Linux (auto-detected by default, comes from
  * config.h) */
-#define DEFAULT_CA_BUNDLE_LINUX DEFAULT_CA_BUNDLE_AUTO
+#define DEFAULT_CA_BUNDLE_LINUX	DEFAULT_CA_BUNDLE_AUTO
 
 /* Default CA bundle file on Windows */
-#define DEFAULT_CA_BUNDLE_WIN32 "C:\\Program Files\\cURL\\bin\\curl-ca-bundle.crt"
+#define DEFAULT_CA_BUNDLE_WIN32	"C:\\Program Files\\cURL\\bin\\curl-ca-bundle.crt"
+
 
 #endif

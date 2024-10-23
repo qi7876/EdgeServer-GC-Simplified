@@ -4,15 +4,16 @@
  * @brief implement the interface of raVerifier
  * @version 0.1
  * @date 2021-05-22
- *
+ * 
  * @copyright Copyright (c) 2021
- *
+ * 
  */
 
 #include "../../include/raVerifier.h"
 
-RAVerifier::RAVerifier(SSLConnection* dataSecureChannel)
-{
+
+
+RAVerifier::RAVerifier(SSLConnection* dataSecureChannel) {
     dataSecureChannel_ = dataSecureChannel;
     verbose_ = false;
     if (!cert_load_file(&signingCA_, IAS_SIGNING_CA_FILE)) {
@@ -58,8 +59,7 @@ RAVerifier::RAVerifier(SSLConnection* dataSecureChannel)
     fprintf(stderr, "RAVerifier: Init the RAVerifier.\n");
 }
 
-RAVerifier::~RAVerifier()
-{
+RAVerifier::~RAVerifier() {
     delete cryptoObj_;
     EVP_MD_CTX_free(mdCtx_);
     EVP_CIPHER_CTX_free(cipherCtx_);
@@ -70,9 +70,8 @@ RAVerifier::~RAVerifier()
     fprintf(stderr, "RAVerifier: Destroy the RAVerifier.\n");
 }
 
-void RAVerifier::RAVerification(SSL* connectionForServer, EnclaveSession_t& newSession)
-{
-    SGX_Msg01_t recvMsg01;
+void RAVerifier::RAVerification(SSL* connectionForServer, EnclaveSession_t& newSession) {
+    SGX_Msg01_t recvMsg01; 
 
     // for msg2
     sgx_ra_msg2_t msg2;
@@ -87,7 +86,7 @@ void RAVerifier::RAVerification(SSL* connectionForServer, EnclaveSession_t& newS
 
     // recv msg01
     if (!dataSecureChannel_->ReceiveData(connectionForServer, responseBuffer,
-            recvSize)) {
+        recvSize)) {
         fprintf(stderr, "RAVerifier: recv msg01 fails.\n");
         exit(EXIT_FAILURE);
     }
@@ -105,20 +104,20 @@ void RAVerifier::RAVerification(SSL* connectionForServer, EnclaveSession_t& newS
     responseHeader.dataSize = sizeof(msg2) + msg2.sig_rl_size;
 
     offset = 0;
-    memcpy(responseBuffer + offset, &responseHeader, sizeof(responseHeader));
+    memcpy(responseBuffer + offset, &responseHeader, sizeof(responseHeader)); 
     offset += sizeof(responseHeader);
     memcpy(responseBuffer + offset, &msg2, responseHeader.dataSize);
     offset += responseHeader.dataSize;
     totalSendSize = sizeof(NetworkHead_t) + responseHeader.dataSize;
-    if (!dataSecureChannel_->SendData(connectionForServer, responseBuffer,
-            totalSendSize)) {
+    if (!dataSecureChannel_->SendData(connectionForServer, responseBuffer, 
+        totalSendSize)) {
         fprintf(stderr, "RAVerifier: send msg2 fails.\n");
         exit(EXIT_FAILURE);
     }
 
-    // recv msg3
+    // recv msg3 
     if (!dataSecureChannel_->ReceiveData(connectionForServer, responseBuffer,
-            recvSize)) {
+        recvSize)) {
         fprintf(stderr, "RAVerifier: recv msg3 fails.\n");
         exit(EXIT_FAILURE);
     }
@@ -130,12 +129,13 @@ void RAVerifier::RAVerification(SSL* connectionForServer, EnclaveSession_t& newS
         exit(EXIT_FAILURE);
     }
 
-    uint32_t quote_size = recvSize - sizeof(NetworkHead_t) - sizeof(sgx_ra_msg3_t);
+    uint32_t quote_size = recvSize - sizeof(NetworkHead_t) - 
+        sizeof(sgx_ra_msg3_t);
     if (verbose_) {
         fprintf(stderr, "RAVerifier: recv msg3 quote size: %u\n", quote_size);
     }
 
-    sgx_ra_msg3_t* msg3Buffer = (sgx_ra_msg3_t*)(responseBuffer + offset);
+    sgx_ra_msg3_t* msg3Buffer = (sgx_ra_msg3_t*) (responseBuffer + offset);
 
     this->ProcessMsg3(newSession, msg3Buffer, msg4, quote_size);
 
@@ -149,8 +149,8 @@ void RAVerifier::RAVerification(SSL* connectionForServer, EnclaveSession_t& newS
     memcpy(responseBuffer + offset, &msg4, sizeof(msg4));
     offset += sizeof(msg4);
 
-    if (!dataSecureChannel_->SendData(connectionForServer, responseBuffer,
-            totalSendSize)) {
+    if (!dataSecureChannel_->SendData(connectionForServer, responseBuffer, 
+        totalSendSize)) {
         fprintf(stderr, "RAVerifer: send msg4 error.\n");
         exit(EXIT_FAILURE);
     }
@@ -158,12 +158,11 @@ void RAVerifier::RAVerification(SSL* connectionForServer, EnclaveSession_t& newS
     memcpy(&currentSession_, &newSession, sizeof(EnclaveSession_t));
     fprintf(stderr, "RAVerifier: RA is successful.\n");
 
-    return;
+    return ;
 }
 
 void RAVerifier::ProcessMsg01(EnclaveSession_t& enclaveSession, SGX_Msg01_t& recvMsg01,
-    sgx_ra_msg2_t& msg2)
-{
+    sgx_ra_msg2_t& msg2) {
     EVP_PKEY* Gb;
     uint8_t digest[32];
     uint8_t r[32];
@@ -217,12 +216,11 @@ void RAVerifier::ProcessMsg01(EnclaveSession_t& enclaveSession, SGX_Msg01_t& rec
     cmac128(enclaveSession.smk, (uint8_t*)&msg2, 148,
         (uint8_t*)&msg2.mac);
 
-    EVP_PKEY_free(Gb);
-    return;
+    EVP_PKEY_free(Gb);    
+    return ;
 }
 
-void RAVerifier::DeriveKDK(EVP_PKEY* Gb, uint8_t* kdk, sgx_ec256_public_t g_a)
-{
+void RAVerifier::DeriveKDK(EVP_PKEY* Gb, uint8_t* kdk, sgx_ec256_public_t g_a) {
     uint8_t* Gab_x;
     uint8_t cmacKey[16];
     size_t len;
@@ -248,11 +246,10 @@ void RAVerifier::DeriveKDK(EVP_PKEY* Gb, uint8_t* kdk, sgx_ec256_public_t g_a)
     // free memory
     EVP_PKEY_free(Ga);
     OPENSSL_free(Gab_x);
-    return;
+    return ;
 }
 
-void RAVerifier::GetSigrl(uint8_t* gid, char* sig_rl, uint32_t* sig_rl_size)
-{
+void RAVerifier::GetSigrl(uint8_t* gid, char* sig_rl, uint32_t* sig_rl_size) {
     IAS_Request* req;
     req = new IAS_Request(iasConnection_, iasVersion_);
     if (!req) {
@@ -273,31 +270,30 @@ void RAVerifier::GetSigrl(uint8_t* gid, char* sig_rl, uint32_t* sig_rl_size)
     }
     *sig_rl_size = (uint32_t)sigrlStr.size();
     delete req;
-    return;
+    return ;
 }
 
 void RAVerifier::ProcessMsg3(EnclaveSession_t& enclaveSession, sgx_ra_msg3_t* msg3,
-    ra_msg4_t& msg4, uint32_t quote_sz)
-{
+    ra_msg4_t& msg4, uint32_t quote_sz) {
     if (verbose_) {
         fprintf(stderr, "RAVerifier: msg3 CMAC: ");
         tool::PrintBinaryArray((uint8_t*)&msg3->mac, sizeof(msg3->mac));
     }
 
     if (CRYPTO_memcmp(&msg3->g_a, &enclaveSession.msg1.g_a,
-            sizeof(sgx_ec256_public_t))) {
+        sizeof(sgx_ec256_public_t))) {
         fprintf(stderr, "RAVerifier: msg1.ga != msg3.ga\n");
         exit(EXIT_FAILURE);
     }
 
-    // validate the MAC
+    // validate the MAC 
     sgx_mac_t vrfMsgMAC;
     cmac128(enclaveSession.smk, (uint8_t*)&msg3->g_a,
         sizeof(sgx_ra_msg3_t) - sizeof(sgx_mac_t) + quote_sz,
         (uint8_t*)vrfMsgMAC);
-
+    
     if (verbose_) {
-        fprintf(stderr, "RAVerifier: msg3.mac = %s\n",
+        fprintf(stderr, "RAVerifier: msg3.mac = %s\n", 
             hexstring(msg3->mac, sizeof(sgx_mac_t)));
         fprintf(stderr, "RAVerifier: calculated = %s\n",
             hexstring(vrfMsgMAC, sizeof(sgx_mac_t)));
@@ -311,9 +307,9 @@ void RAVerifier::ProcessMsg3(EnclaveSession_t& enclaveSession, sgx_ra_msg3_t* ms
     char* b64quote;
     b64quote = base64_encode((char*)&msg3->quote, quote_sz);
     sgx_quote_t* q;
-    q = (sgx_quote_t*)msg3->quote;
-    if (memcmp(enclaveSession.msg1.gid, &q->epid_group_id,
-            sizeof(sgx_epid_group_id_t))) {
+    q = (sgx_quote_t*) msg3->quote;
+    if (memcmp(enclaveSession.msg1.gid, &q->epid_group_id, 
+        sizeof(sgx_epid_group_id_t))) {
         fprintf(stderr, "RAVerifier: attestation fails (differ gid).\n");
         exit(EXIT_FAILURE);
     }
@@ -330,7 +326,7 @@ void RAVerifier::ProcessMsg3(EnclaveSession_t& enclaveSession, sgx_ra_msg3_t* ms
     // derive vk
     cmac128(enclaveSession.kdk, (unsigned char*)("\x01VK\x00\x80\x00"),
         6, enclaveSession.vk);
-
+    
     // build our plaintext
     memcpy(msg_rdata, enclaveSession.g_a, 64);
     memcpy(&msg_rdata[64], enclaveSession.g_b, 64);
@@ -340,7 +336,7 @@ void RAVerifier::ProcessMsg3(EnclaveSession_t& enclaveSession, sgx_ra_msg3_t* ms
     sha256_digest(msg_rdata, 144, vfy_rdata);
 
     if (CRYPTO_memcmp((void*)vfy_rdata, (void*)&r->report_data,
-            64)) {
+        64)) {
         fprintf(stderr, "RAVerifier: report verification failed.\n");
         exit(EXIT_FAILURE);
     }
@@ -354,12 +350,12 @@ void RAVerifier::ProcessMsg3(EnclaveSession_t& enclaveSession, sgx_ra_msg3_t* ms
     }
 
     free(b64quote);
-    return;
+    return ;
 }
 
+
 void RAVerifier::GetAttestationReport(const char* b64quote, sgx_ps_sec_prop_desc_t secprop,
-    ra_msg4_t* msg4)
-{
+    ra_msg4_t* msg4) {
     IAS_Request* req = NULL;
     map<string, string> payload;
     vector<string> messages;
@@ -388,7 +384,7 @@ void RAVerifier::GetAttestationReport(const char* b64quote, sgx_ps_sec_prop_desc
 
         if (reportObj.hasKey("version")) {
             uint32_t retVersion = (uint32_t)reportObj["version"].ToInt();
-            if (iasVersion_ != retVersion) {
+            if(iasVersion_ != retVersion) {
                 fprintf(stderr, "RAVerifier: report version cannot match.\n");
                 exit(EXIT_FAILURE);
             }
@@ -409,5 +405,5 @@ void RAVerifier::GetAttestationReport(const char* b64quote, sgx_ps_sec_prop_desc
 
     messages.clear();
     delete req;
-    return;
+    return ;
 }

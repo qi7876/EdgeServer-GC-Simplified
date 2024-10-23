@@ -45,7 +45,7 @@ struct Response {
                << " " << statusCode << " " << status << "\n";
 
         for (std::vector<Response::HeaderItem>::const_iterator it = headers.begin();
-            it != headers.end(); ++it) {
+             it != headers.end(); ++it) {
             stream << it->name << ": " << it->value << "\n";
         }
 
@@ -73,7 +73,7 @@ struct Response {
         std::stringstream stream;
         // Just in case we get more than one header with the same name.
         for (std::vector<Response::HeaderItem>::const_iterator it = headers.begin();
-            it != headers.end(); ++it) {
+             it != headers.end(); ++it) {
             if (is_equal_ncase(it->name, name))
                 stream << it->value << "\n";
         }

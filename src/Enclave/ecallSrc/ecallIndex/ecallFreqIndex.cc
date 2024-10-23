@@ -4,19 +4,18 @@
  * @brief implement the interface of frequency-two index
  * @version 0.1
  * @date 2021-01-15
- *
+ * 
  * @copyright Copyright (c) 2021
- *
+ * 
  */
 
 #include "../../include/ecallFreqIndex.h"
 
 /**
  * @brief Construct a new Ecall Frequency Index object
- *
+ * 
  */
-EcallFreqIndex::EcallFreqIndex()
-{
+EcallFreqIndex::EcallFreqIndex() {
     topThreshold_ = Enclave::topKParam_;
     insideDedupIndex_ = new EcallEntryHeap();
     insideDedupIndex_->SetHeapSize(topThreshold_);
@@ -24,18 +23,17 @@ EcallFreqIndex::EcallFreqIndex()
 
     if (ENABLE_SEALING) {
         if (!this->LoadDedupIndex()) {
-            // Enclave::Logging(myName_.c_str(), "do not need to load the index.\n");
+            //Enclave::Logging(myName_.c_str(), "do not need to load the index.\n");
         }
     }
-    // Enclave::Logging(myName_.c_str(), "init the EcallFreqIndex.\n");
+    //Enclave::Logging(myName_.c_str(), "init the EcallFreqIndex.\n");
 }
 
 /**
  * @brief Destroy the Ecall Frequency Index object
- *
+ * 
  */
-EcallFreqIndex::~EcallFreqIndex()
-{
+EcallFreqIndex::~EcallFreqIndex() {
     // size_t heapSize = insideDedupIndex_->Size();
     // fprintf(stdout, "the number of entry: %lu\n", heapSize);
     // for (size_t i = 0; i < heapSize; i++) {
@@ -54,11 +52,11 @@ EcallFreqIndex::~EcallFreqIndex()
     delete cmSketch_;
     Ocall_Printf("\n\n");
     Enclave::Logging(myName_.c_str(), "========EdgeServer Info========\n");
-    // Enclave::Logging(myName_.c_str(), "logical chunk num: %lu\n", _logicalChunkNum);
-    Enclave::Logging(myName_.c_str(), "total logical data size: %lu MiB\n", _logicalDataSize / (1024 * 1024));
-    // Enclave::Logging(myName_.c_str(), "unique chunk num: %lu\n", _uniqueChunkNum);
-    // Enclave::Logging(myName_.c_str(), "unique data size: %lu\n", _uniqueDataSize);
-    Enclave::Logging(myName_.c_str(), "total write data size: %lu MiB\n", _compressedDataSize / (1024 * 1024));
+    //Enclave::Logging(myName_.c_str(), "logical chunk num: %lu\n", _logicalChunkNum);
+    Enclave::Logging(myName_.c_str(), "total logical data size: %lu MiB\n", _logicalDataSize / (1024*1024));
+    //Enclave::Logging(myName_.c_str(), "unique chunk num: %lu\n", _uniqueChunkNum);
+    //Enclave::Logging(myName_.c_str(), "unique data size: %lu\n", _uniqueDataSize);
+    Enclave::Logging(myName_.c_str(), "total write data size: %lu MiB\n", _compressedDataSize / (1024*1024)); 
     // Enclave::Logging(myName_.c_str(), "inside dedup chunk num: %lu\n", insideDedupChunkNum_);
     // Enclave::Logging(myName_.c_str(), "inside dedup data size: %lu\n", insideDedupDataSize_);
     Enclave::Logging(myName_.c_str(), "===================================\n");
@@ -67,23 +65,21 @@ EcallFreqIndex::~EcallFreqIndex()
 
 /**
  * @brief update the inside-enclave with only freq
- *
+ * 
  * @param ChunkFp the chunk fp
  * @param currentFreq the current frequency
  */
-void EcallFreqIndex::UpdateInsideIndexFreq(const string& chunkFp, uint32_t currentFreq)
-{
+void EcallFreqIndex::UpdateInsideIndexFreq(const string& chunkFp, uint32_t currentFreq) {
     insideDedupIndex_->Update(chunkFp, currentFreq);
-    return;
+    return ;
 }
 
 /**
  * @brief process the tailed batch when received the end of the recipe flag
- *
+ * 
  * @param upOutSGX the pointer to enclave-related var
  */
-void EcallFreqIndex::ProcessTailBatch(UpOutSGX_t* upOutSGX)
-{
+void EcallFreqIndex::ProcessTailBatch(UpOutSGX_t* upOutSGX) {
     // the in-enclave info
     EnclaveClient* sgxClient = (EnclaveClient*)upOutSGX->sgxClient;
     Recipe_t* inRecipe = &sgxClient->_inRecipe;
@@ -111,7 +107,7 @@ void EcallFreqIndex::ProcessTailBatch(UpOutSGX_t* upOutSGX)
         outRecipe->recipeNum = inRecipe->recipeNum;
 
         Ocall_UpdateFileRecipe(upOutSGX->outClient);
-
+        
         inRecipe->recipeNum = 0;
     }
 
@@ -128,23 +124,23 @@ void EcallFreqIndex::ProcessTailBatch(UpOutSGX_t* upOutSGX)
         memcpy(upOutSGX->curContainer->body, curNumChar, 4);
         cryptoObj_->EncryptWithKey(cipherCtx, sgxClient->_inContainer.headerBuf,
             sgxClient->_inContainer.curHeaderSize, Enclave::indexQueryKey_, upOutSGX->curContainer->body + 4);
-        memcpy(upOutSGX->curContainer->body + 4 + sgxClient->_inContainer.curHeaderSize,
+        memcpy(upOutSGX->curContainer->body + 4 + sgxClient->_inContainer.curHeaderSize, 
             sgxClient->_inContainer.contentBuf, sgxClient->_inContainer.curContentSize);
 
-        upOutSGX->curContainer->currentSize = 4 + sgxClient->_inContainer.curHeaderSize + sgxClient->_inContainer.curContentSize;
+        upOutSGX->curContainer->currentSize = 4 + sgxClient->_inContainer.curHeaderSize + 
+            sgxClient->_inContainer.curContentSize;
     }
 
-    return;
+    return ;
 }
 
 /**
  * @brief persist the deduplication index into the disk
- *
+ * 
  * @return true success
  * @return false fail
  */
-bool EcallFreqIndex::PersistDedupIndex()
-{
+bool EcallFreqIndex::PersistDedupIndex() {
     size_t itemNum;
     bool persistenceStatus;
     size_t requiredBufferSize = 0;
@@ -164,7 +160,7 @@ bool EcallFreqIndex::PersistDedupIndex()
     }
     Ocall_CloseWriteSealedFile(SEALED_SKETCH);
 
-    // step-2: persist the min-heap
+    // step-2: persist the min-heap 
     offset = 0;
     Ocall_InitWriteSealedFile(&persistenceStatus, SEALED_FREQ_INDEX);
     if (persistenceStatus == false) {
@@ -174,7 +170,7 @@ bool EcallFreqIndex::PersistDedupIndex()
     auto heapPtr = &insideDedupIndex_->_heap;
     itemNum = heapPtr->size();
     requiredBufferSize = sizeof(size_t) + itemNum * (CHUNK_HASH_SIZE + sizeof(HeapItem_t));
-    tmpBuffer = (uint8_t*)malloc(sizeof(uint8_t) * requiredBufferSize);
+    tmpBuffer = (uint8_t*) malloc(sizeof(uint8_t) * requiredBufferSize);
     memcpy(tmpBuffer + offset, &itemNum, sizeof(size_t));
     offset += sizeof(size_t);
     for (size_t i = 0; i < itemNum; i++) {
@@ -192,31 +188,30 @@ bool EcallFreqIndex::PersistDedupIndex()
 
 /**
  * @brief read the hook index from sealed data
- *
+ * 
  * @return true success
  * @return false fail
  */
-bool EcallFreqIndex::LoadDedupIndex()
-{
+bool EcallFreqIndex::LoadDedupIndex() {
     size_t itemNum;
     string tmpChunkFp;
     tmpChunkFp.resize(CHUNK_HASH_SIZE, 0);
     size_t sealedDataSize;
     size_t offset = 0;
 
-    // step-1: load the sketch state
+    // step-1: load the sketch state 
     uint32_t** counterArray = cmSketch_->GetCounterArray();
     Ocall_InitReadSealedFile(&sealedDataSize, SEALED_SKETCH);
     if (sealedDataSize == 0) {
         return false;
-    }
+    }   
 
     for (size_t i = 0; i < sketchDepth_; i++) {
         Enclave::ReadFileToBuffer((uint8_t*)counterArray[i], sizeof(uint32_t) * sketchWidth_, SEALED_SKETCH);
     }
     Ocall_CloseReadSealedFile(SEALED_SKETCH);
 
-    // step-2: load the min-heap
+    // step-2: load the min-heap 
     auto heapPtr = &insideDedupIndex_->_heap;
     auto indexPtr = &insideDedupIndex_->_index;
     Ocall_InitReadSealedFile(&sealedDataSize, SEALED_FREQ_INDEX);
@@ -224,7 +219,7 @@ bool EcallFreqIndex::LoadDedupIndex()
         return false;
     }
 
-    uint8_t* tmpIndexBuffer = (uint8_t*)malloc(sealedDataSize * sizeof(uint8_t));
+    uint8_t* tmpIndexBuffer = (uint8_t*) malloc(sealedDataSize * sizeof(uint8_t));
     Enclave::ReadFileToBuffer(tmpIndexBuffer, sealedDataSize, SEALED_FREQ_INDEX);
     memcpy(&itemNum, tmpIndexBuffer + offset, sizeof(size_t));
     offset += sizeof(size_t);
@@ -236,22 +231,21 @@ bool EcallFreqIndex::LoadDedupIndex()
         offset += CHUNK_HASH_SIZE;
         memcpy(&tmpItem, tmpIndexBuffer + offset, sizeof(HeapItem_t));
         offset += sizeof(HeapItem_t);
-        auto tmpIt = indexPtr->insert({ tmpChunkFp, tmpItem }).first;
+        auto tmpIt = indexPtr->insert({tmpChunkFp, tmpItem}).first;
         heapPtr->push_back(tmpIt);
     }
     Ocall_CloseReadSealedFile(SEALED_FREQ_INDEX);
 
     free(tmpIndexBuffer);
-    return true;
+    return true; 
 }
 
 /**
  * @brief check whether add this chunk to the heap
- *
+ * 
  * @param chunkFreq the chunk freq
  */
-bool EcallFreqIndex::CheckIfAddToHeap(uint32_t chunkFreq)
-{
+bool EcallFreqIndex::CheckIfAddToHeap(uint32_t chunkFreq) {
     if (insideDedupIndex_->Size() < topThreshold_) {
         return true;
     }
@@ -261,19 +255,18 @@ bool EcallFreqIndex::CheckIfAddToHeap(uint32_t chunkFreq)
         // the input chunk freq is larger than existing one, can add to the heap
         return true;
     }
-    // the input chunk freq is lower than existsing one, cannot add to the heap
+    // the input chunk freq is lower than existsing one, cannot add to the heap 
     return false;
 }
 
 /**
  * @brief Add the information of this chunk to the heap
- *
+ * 
  * @param chunkFreq the chunk freq
  * @param chunkAddr the chunk address
  * @param chunkFp the chunk fp
  */
-void EcallFreqIndex::AddChunkToHeap(uint8_t* secureChunkHash, uint32_t chunkFreq, const string& chunkFp)
-{
+void EcallFreqIndex::AddChunkToHeap(uint8_t* secureChunkHash, uint32_t chunkFreq, const string& chunkFp) {
     HeapItem_t tmpHeapEntry;
     // pop the minimum item
     if (insideDedupIndex_->Size() == topThreshold_) {
@@ -283,20 +276,19 @@ void EcallFreqIndex::AddChunkToHeap(uint8_t* secureChunkHash, uint32_t chunkFreq
     memcpy(tmpHeapEntry.secureChunkHash, secureChunkHash, CHUNK_HASH_SIZE);
     tmpHeapEntry.chunkFreq = chunkFreq;
     insideDedupIndex_->Add(chunkFp, tmpHeapEntry);
-    return;
+    return ;
 }
 
 #if (IMPACT_OF_TOP_K == 0)
 
 /**
  * @brief process one batch
- *
+ * 
  * @param recvChunkBuf the recv chunk buffer
- * @param upOutSGX the pointer to the enclave-related var
+ * @param upOutSGX the pointer to the enclave-related var 
  */
-void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
-    UpOutSGX_t* upOutSGX)
-{
+void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf, 
+    UpOutSGX_t* upOutSGX) {
     // the in-enclave info
     EnclaveClient* sgxClient = (EnclaveClient*)upOutSGX->sgxClient;
     EVP_CIPHER_CTX* cipherCtx = sgxClient->_cipherCtx;
@@ -318,7 +310,7 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
     // decrypt the received data with the session key
     cryptoObj_->SessionKeyDec(cipherCtx, recvChunkBuf->dataBuffer,
         recvChunkBuf->header->dataSize, sessionKey, recvBuffer);
-
+    
     // get the chunk num
     uint32_t chunkNum = recvChunkBuf->header->currentItemNum;
 
@@ -337,7 +329,7 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
 
         cryptoObj_->GenerateHash(mdCtx, recvBuffer + currentOffset,
             inQueryEntry->chunkSize, inQueryEntry->chunkHash);
-
+        
         // 生成MLEKey
         memcpy(inQueryEntry->mleKey, inQueryEntry->chunkHash, MLE_KEY_SIZE);
 
@@ -346,45 +338,45 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
     }
     // Enclave::Logging(myName_.c_str(), "ok for hash\n");
 
-    {
+{
 #if (MULTI_CLIENT == 1)
-        Enclave::sketchLck_.lock();
+    Enclave::sketchLck_.lock();
 #endif
-        // update the sketch and freq
-        inQueryEntry = inQueryBase;
-        for (size_t i = 0; i < chunkNum; i++) {
-            cmSketch_->Update(inQueryEntry->chunkHash, CHUNK_HASH_SIZE, 1);
-            inQueryEntry->chunkFreq = cmSketch_->Estimate(inQueryEntry->chunkHash,
-                CHUNK_HASH_SIZE);
-            inQueryEntry++;
-        }
-        // Enclave::Logging(myName_.c_str(), "ok for feq\n");
-#if (MULTI_CLIENT == 1)
-        Enclave::sketchLck_.unlock();
-#endif
+    // update the sketch and freq
+    inQueryEntry = inQueryBase;
+    for (size_t i = 0; i < chunkNum; i++) {
+        cmSketch_->Update(inQueryEntry->chunkHash, CHUNK_HASH_SIZE, 1);
+        inQueryEntry->chunkFreq = cmSketch_->Estimate(inQueryEntry->chunkHash,
+            CHUNK_HASH_SIZE);
+        inQueryEntry++;
     }
-
-    {
+    // Enclave::Logging(myName_.c_str(), "ok for feq\n");
 #if (MULTI_CLIENT == 1)
-        Enclave::topKIndexLck_.lock();
+    Enclave::sketchLck_.unlock();
 #endif
-        // check the top-k index
-        uint32_t minFreq;
-        if (insideDedupIndex_->Size() == topThreshold_) {
-            minFreq = insideDedupIndex_->TopEntry();
-        } else {
-            minFreq = 0;
-        }
-        inQueryEntry = inQueryBase;
+}
 
-        for (size_t i = 0; i < chunkNum; i++) {
-            tmpHashStr.assign((char*)inQueryEntry->chunkHash, CHUNK_HASH_SIZE);
-            auto findRes = sgxClient->_localIndex.find(tmpHashStr);
-            if (findRes != sgxClient->_localIndex.end()) {
-                // it exist in this local batch index
-                uint32_t offset = findRes->second;
-                InQueryEntry_t* findEntry = inQueryBase + offset;
-                switch (findEntry->dedupFlag) {
+{
+#if (MULTI_CLIENT == 1)
+    Enclave::topKIndexLck_.lock();
+#endif
+    // check the top-k index
+    uint32_t minFreq;
+    if (insideDedupIndex_->Size() == topThreshold_) {
+        minFreq = insideDedupIndex_->TopEntry();
+    } else {
+        minFreq = 0;
+    }
+    inQueryEntry = inQueryBase;
+    
+    for (size_t i = 0; i < chunkNum; i++) {
+        tmpHashStr.assign((char*)inQueryEntry->chunkHash, CHUNK_HASH_SIZE);
+        auto findRes = sgxClient->_localIndex.find(tmpHashStr);
+        if(findRes != sgxClient->_localIndex.end()) {
+            // it exist in this local batch index
+            uint32_t offset = findRes->second;
+            InQueryEntry_t* findEntry = inQueryBase + offset; 
+            switch (findEntry->dedupFlag) {
                 case UNIQUE: {
                     // this chunk is unique for the top-k index, but duplicate for the local index
                     inQueryEntry->dedupFlag = TMP_UNIQUE;
@@ -400,59 +392,59 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
                 default: {
                     Ocall_SGX_Exit_Error("EcallFreqIndex: wrong in-enclave dedup flag");
                 }
-                }
+            }
 
-                // update the freq
-                findEntry->chunkFreq = inQueryEntry->chunkFreq;
+            // update the freq
+            findEntry->chunkFreq = inQueryEntry->chunkFreq;
+        } else {
+            // it does not exists in the batch index, compare the freq 
+            if (inQueryEntry->chunkFreq < minFreq) {
+                // its frequency is smaller than the minimum value in the heap, must not exist in the heap
+                // encrypt its fingerprint, write to the outside buffer
+                cryptoObj_->IndexAESCMCEnc(cipherCtx, inQueryEntry->chunkHash,
+                    CHUNK_HASH_SIZE, Enclave::indexQueryKey_, outQueryEntry->chunkHash);
+                
+                // update the in-enclave query buffer
+                inQueryEntry->dedupFlag = UNIQUE;
+                inQueryEntry->entryOffset = outQueryNum;
+
+                // update the out-enclave query buffer
+                outQueryEntry++;
+                outQueryNum++;
             } else {
-                // it does not exists in the batch index, compare the freq
-                if (inQueryEntry->chunkFreq < minFreq) {
-                    // its frequency is smaller than the minimum value in the heap, must not exist in the heap
-                    // encrypt its fingerprint, write to the outside buffer
-                    cryptoObj_->IndexAESCMCEnc(cipherCtx, inQueryEntry->chunkHash,
-                        CHUNK_HASH_SIZE, Enclave::indexQueryKey_, outQueryEntry->chunkHash);
+                // its frequency is higher than the minimum value in the heap, check the heap
+                bool topKRes = insideDedupIndex_->Contains(tmpHashStr);
+                if (topKRes) {
+                    // it exists in the heap, directly read
+                    inQueryEntry->dedupFlag = DUPLICATE;
 
-                    // update the in-enclave query buffer
+                    memcpy(inQueryEntry->secureChunkHash, 
+                        (HeapItem_t*)insideDedupIndex_->GetPriority(tmpHashStr)->secureChunkHash,
+                        CHUNK_HASH_SIZE);
+                } else {
+                    // it does not exist in the heap
+                    cryptoObj_->IndexAESCMCEnc(cipherCtx, inQueryEntry->chunkHash, CHUNK_HASH_SIZE,
+                        Enclave::indexQueryKey_, outQueryEntry->chunkHash);
+                    
+                    // update the dedup list
                     inQueryEntry->dedupFlag = UNIQUE;
                     inQueryEntry->entryOffset = outQueryNum;
 
                     // update the out-enclave query buffer
                     outQueryEntry++;
                     outQueryNum++;
-                } else {
-                    // its frequency is higher than the minimum value in the heap, check the heap
-                    bool topKRes = insideDedupIndex_->Contains(tmpHashStr);
-                    if (topKRes) {
-                        // it exists in the heap, directly read
-                        inQueryEntry->dedupFlag = DUPLICATE;
-
-                        memcpy(inQueryEntry->secureChunkHash,
-                            (HeapItem_t*)insideDedupIndex_->GetPriority(tmpHashStr)->secureChunkHash,
-                            CHUNK_HASH_SIZE);
-                    } else {
-                        // it does not exist in the heap
-                        cryptoObj_->IndexAESCMCEnc(cipherCtx, inQueryEntry->chunkHash, CHUNK_HASH_SIZE,
-                            Enclave::indexQueryKey_, outQueryEntry->chunkHash);
-
-                        // update the dedup list
-                        inQueryEntry->dedupFlag = UNIQUE;
-                        inQueryEntry->entryOffset = outQueryNum;
-
-                        // update the out-enclave query buffer
-                        outQueryEntry++;
-                        outQueryNum++;
-                    }
                 }
-
-                sgxClient->_localIndex[tmpHashStr] = i;
             }
-            inQueryEntry++;
+
+            sgxClient->_localIndex[tmpHashStr] = i;
         }
-        // Enclave::Logging(myName_.c_str(), "ok for topk\n");
-#if (MULTI_CLIENT == 1)
-        Enclave::topKIndexLck_.unlock();
-#endif
+        inQueryEntry++;
     }
+    // Enclave::Logging(myName_.c_str(), "ok for topk\n");
+#if (MULTI_CLIENT == 1)
+    Enclave::topKIndexLck_.unlock();
+#endif
+}
     // check the out-enclave index
     if (outQueryNum != 0) {
         upOutSGX->outQuery->queryNum = outQueryNum;
@@ -472,78 +464,78 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
         tmpChunkSize = inQueryEntry->chunkSize;
         currentOffset += sizeof(uint32_t);
         switch (inQueryEntry->dedupFlag) {
-        case DUPLICATE: {
-            // it is duplicate for the min-heap
-            // update the statistic
-            insideDedupChunkNum_++;
-            insideDedupDataSize_ += tmpChunkSize;
-            break;
-        }
-        case TMP_DUPLICATE: {
-            // it is also duplicate, for the local index
-            tmpQueryEntry = inQueryBase + inQueryEntry->entryOffset;
-            memcpy(inQueryEntry->secureChunkHash, tmpQueryEntry->secureChunkHash, CHUNK_HASH_SIZE);
-
-            // update the statistic
-            insideDedupChunkNum_++;
-            insideDedupDataSize_ += tmpChunkSize;
-            break;
-        }
-        case UNIQUE: {
-            // it is unique for the top-k index
-            switch (outQueryEntry->dedupFlag) {
             case DUPLICATE: {
-                // it is duplicate for the out-enclave index
-                // cryptoObj_->DecryptWithKey(cipherCtx, (uint8_t*)&outQueryEntry->secureChunkHash,
-                //     CHUNK_HASH_SIZE, Enclave::indexQueryKey_,
-                //     inQueryEntry->secureChunkHash);
-                memcpy(inQueryEntry->secureChunkHash, outQueryEntry->secureChunkHash, CHUNK_HASH_SIZE);
+                // it is duplicate for the min-heap
+                // update the statistic
+                insideDedupChunkNum_++;
+                insideDedupDataSize_ += tmpChunkSize;
+                break;    
+            }
+            case TMP_DUPLICATE: {
+                // it is also duplicate, for the local index
+                tmpQueryEntry = inQueryBase + inQueryEntry->entryOffset;
+                memcpy(inQueryEntry->secureChunkHash, tmpQueryEntry->secureChunkHash, CHUNK_HASH_SIZE);
+                
+                // update the statistic
+                insideDedupChunkNum_++;
+                insideDedupDataSize_ += tmpChunkSize;
                 break;
             }
             case UNIQUE: {
-                // it also unique for the out-enclave index
-                this->ProcessUniqueChunk(inQueryEntry->containerName,
-                    recvBuffer + currentOffset,
-                    tmpChunkSize,
-                    upOutSGX,
-                    inQueryEntry->mleKey,
-                    inQueryEntry->chunkHash,
-                    inQueryEntry->secureChunkHash);
+                // it is unique for the top-k index
+                switch (outQueryEntry->dedupFlag) {
+                    case DUPLICATE: {
+                        // it is duplicate for the out-enclave index
+                        // cryptoObj_->DecryptWithKey(cipherCtx, (uint8_t*)&outQueryEntry->secureChunkHash,
+                        //     CHUNK_HASH_SIZE, Enclave::indexQueryKey_,
+                        //     inQueryEntry->secureChunkHash);
+                        memcpy(inQueryEntry->secureChunkHash, outQueryEntry->secureChunkHash, CHUNK_HASH_SIZE);
+                        break;
+                    }
+                    case UNIQUE: {
+                        // it also unique for the out-enclave index
+                        this->ProcessUniqueChunk(inQueryEntry->containerName,
+                            recvBuffer + currentOffset, 
+                            tmpChunkSize, 
+                            upOutSGX, 
+                            inQueryEntry->mleKey, 
+                            inQueryEntry->chunkHash, 
+                            inQueryEntry->secureChunkHash);
+                        
+                        cryptoObj_->EncryptWithKey(cipherCtx, (uint8_t*)&inQueryEntry->containerName,
+                            CONTAINER_ID_LENGTH, Enclave::indexQueryKey_,
+                            outQueryEntry->containerName);
 
-                cryptoObj_->EncryptWithKey(cipherCtx, (uint8_t*)&inQueryEntry->containerName,
-                    CONTAINER_ID_LENGTH, Enclave::indexQueryKey_,
-                    outQueryEntry->containerName);
+                        // cryptoObj_->EncryptWithKey(cipherCtx, (uint8_t*)&inQueryEntry->secureChunkHash,
+                        //     CHUNK_HASH_SIZE, Enclave::indexQueryKey_,
+                        //     outQueryEntry->secureChunkHash);
+                        memcpy(outQueryEntry->secureChunkHash, inQueryEntry->secureChunkHash, CHUNK_HASH_SIZE);
 
-                // cryptoObj_->EncryptWithKey(cipherCtx, (uint8_t*)&inQueryEntry->secureChunkHash,
-                //     CHUNK_HASH_SIZE, Enclave::indexQueryKey_,
-                //     outQueryEntry->secureChunkHash);
-                memcpy(outQueryEntry->secureChunkHash, inQueryEntry->secureChunkHash, CHUNK_HASH_SIZE);
-
-                // update the statistic
-                _uniqueChunkNum++;
-                _uniqueDataSize += tmpChunkSize;
+                        // update the statistic
+                        _uniqueChunkNum++;
+                        _uniqueDataSize += tmpChunkSize;
+                        break;
+                    }
+                    default: {
+                        Ocall_SGX_Exit_Error("EcallFreqIndex: wrong out-enclave dedup flag");
+                    }
+                }
+                outQueryEntry++;
+                break;
+            }
+            case TMP_UNIQUE: {
+                // it is unique for the top-k index, but duplicate in local index
+                tmpQueryEntry = inQueryBase + inQueryEntry->entryOffset;
+                memcpy(inQueryEntry->secureChunkHash, tmpQueryEntry->secureChunkHash, CHUNK_HASH_SIZE);
+                
+                // update statistic
+                insideDedupChunkNum_++;
+                insideDedupDataSize_ += tmpChunkSize;
                 break;
             }
             default: {
-                Ocall_SGX_Exit_Error("EcallFreqIndex: wrong out-enclave dedup flag");
+                Ocall_SGX_Exit_Error("EcallFreqIndex: wrong chunk status flag");
             }
-            }
-            outQueryEntry++;
-            break;
-        }
-        case TMP_UNIQUE: {
-            // it is unique for the top-k index, but duplicate in local index
-            tmpQueryEntry = inQueryBase + inQueryEntry->entryOffset;
-            memcpy(inQueryEntry->secureChunkHash, tmpQueryEntry->secureChunkHash, CHUNK_HASH_SIZE);
-
-            // update statistic
-            insideDedupChunkNum_++;
-            insideDedupDataSize_ += tmpChunkSize;
-            break;
-        }
-        default: {
-            Ocall_SGX_Exit_Error("EcallFreqIndex: wrong chunk status flag");
-        }
         }
         // tmpHashStr.assign((char*)inQueryEntry->chunkHash, CHUNK_HASH_SIZE);
         this->UpdateFileRecipe(inQueryEntry, inRecipe, inSecureRecipe, inKeyRecipe, upOutSGX);
@@ -564,8 +556,8 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
     uint8_t tmpLZ4ChunkContent[MAX_CHUNK_SIZE];
     uint8_t tmpEncChunkContent[MAX_CHUNK_SIZE];
     for (size_t i = 0; i < chunkNum; i++) {
-        secureChunkHashStr1.resize(CHUNK_HASH_SIZE + 1, 0);
-        secureChunkHashStr2.resize(CHUNK_HASH_SIZE + 1, 0);
+        secureChunkHashStr1.resize(CHUNK_HASH_SIZE+1, 0);
+        secureChunkHashStr2.resize(CHUNK_HASH_SIZE+1, 0);
         secureChunkHashStr1.assign((char*)inQueryEntry->secureChunkHash, CHUNK_HASH_SIZE);
         tmpChunkSize = inQueryEntry->chunkSize;
         currentOffset += sizeof(uint32_t);
@@ -574,12 +566,13 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
         if (tmpCompressedChunkSize > 0) {
             cryptoObj_->EncryptWithKey(cipherCtx, tmpLZ4ChunkContent, tmpCompressedChunkSize,
                 inQueryEntry->mleKey, tmpEncChunkContent);
-            cryptoObj_->GenerateHash(mdCtx, tmpEncChunkContent,
+            cryptoObj_->GenerateHash(mdCtx, tmpEncChunkContent, 
                 tmpCompressedChunkSize, tmpSecureChunkHash);
-        } else {
+        }
+        else {
             cryptoObj_->EncryptWithKey(cipherCtx, recvBuffer + currentOffset, inQueryEntry->chunkSize,
                 inQueryEntry->mleKey, tmpEncChunkContent);
-            cryptoObj_->GenerateHash(mdCtx, tmpEncChunkContent,
+            cryptoObj_->GenerateHash(mdCtx, tmpEncChunkContent, 
                 inQueryEntry->chunkSize, tmpSecureChunkHash);
         }
         secureChunkHashStr2.assign((char*)tmpSecureChunkHash, CHUNK_HASH_SIZE);
@@ -593,7 +586,8 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
             Enclave::Logging(myName_.c_str(), "Wrong Secure FP!\n");
             Enclave::Logging(myName_.c_str(), "-------------------\n");
             Ocall_SGX_Exit_Error("Wrong Secure FP!");
-        } else {
+        }
+        else {
             // Enclave::Logging(myName_.c_str(), "-------------------\n");
             // Enclave::Logging(myName_.c_str(), "secure FP: \n");
             // for (size_t j = 0; j < CHUNK_HASH_SIZE; j++) {
@@ -605,51 +599,51 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
         inQueryEntry++;
     }
 
-    {
+{
 #if (MULTI_CLIENT == 1)
-        Enclave::topKIndexLck_.lock();
+    Enclave::topKIndexLck_.lock();
 #endif
-        // update the min-heap
-        inQueryEntry = inQueryBase;
-        for (size_t i = 0; i < chunkNum; i++) {
-            if (inQueryEntry->dedupFlag == UNIQUE || inQueryEntry->dedupFlag == DUPLICATE) {
-                uint32_t chunkFreq = inQueryEntry->chunkFreq;
-                if (this->CheckIfAddToHeap(chunkFreq)) {
-                    // add this chunk to the top-k index
-                    tmpHashStr.assign((char*)inQueryEntry->chunkHash, CHUNK_HASH_SIZE);
-                    if (insideDedupIndex_->Contains(tmpHashStr)) {
-                        // it exists in the min-heap
-                        this->UpdateInsideIndexFreq(tmpHashStr, chunkFreq);
-                    } else {
-                        // it does not exist in the min-heap
-                        this->AddChunkToHeap(inQueryEntry->secureChunkHash, chunkFreq, tmpHashStr);
-                    }
+    // update the min-heap
+    inQueryEntry = inQueryBase;
+    for (size_t i = 0; i < chunkNum; i++) {
+        if (inQueryEntry->dedupFlag == UNIQUE || 
+            inQueryEntry->dedupFlag == DUPLICATE) {
+            uint32_t chunkFreq = inQueryEntry->chunkFreq;
+            if (this->CheckIfAddToHeap(chunkFreq)) {
+                // add this chunk to the top-k index
+                tmpHashStr.assign((char*)inQueryEntry->chunkHash, CHUNK_HASH_SIZE);
+                if (insideDedupIndex_->Contains(tmpHashStr)) {
+                    // it exists in the min-heap
+                    this->UpdateInsideIndexFreq(tmpHashStr, chunkFreq);
+                } else {
+                    // it does not exist in the min-heap
+                    this->AddChunkToHeap(inQueryEntry->secureChunkHash, chunkFreq, tmpHashStr);
                 }
             }
-            inQueryEntry++;
         }
-#if (MULTI_CLIENT == 1)
-        Enclave::topKIndexLck_.unlock();
-#endif
+        inQueryEntry++;
     }
+#if (MULTI_CLIENT == 1)
+    Enclave::topKIndexLck_.unlock();
+#endif
+}
     // update the out-enclave index
     upOutSGX->outQuery->queryNum = outQueryNum;
     sgxClient->_localIndex.clear();
 
-    return;
+    return ;
 }
 
 #else
 
 /**
  * @brief process one batch (breakdown version)
- *
+ * 
  * @param recvChunkBuf the recv chunk buffer
- * @param upOutSGX the pointer to the enclave-related var
+ * @param upOutSGX the pointer to the enclave-related var 
  */
-void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
-    UpOutSGX_t* upOutSGX)
-{
+void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf, 
+    UpOutSGX_t* upOutSGX) {
     // the in-enclave info
     EnclaveClient* sgxClient = (EnclaveClient*)upOutSGX->sgxClient;
     EVP_CIPHER_CTX* cipherCtx = sgxClient->_cipherCtx;
@@ -702,18 +696,18 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
 #if (SGX_BREAKDOWN == 1)
         Ocall_GetCurrentTime(&_startTime);
 #endif
-        cryptoObj_->GenerateHash(mdCtx, recvBuffer + currentOffset, tmpChunkSize,
+        cryptoObj_->GenerateHash(mdCtx, recvBuffer + currentOffset, tmpChunkSize, 
             (uint8_t*)&tmpHashStr[0]);
 #if (SGX_BREAKDOWN == 1)
         Ocall_GetCurrentTime(&_endTime);
         _fingerprintTime += (_endTime - _startTime);
         _fingerprintCount++;
 #endif
-
+        
 #if (SGX_BREAKDOWN == 1)
         Ocall_GetCurrentTime(&_startTime);
 #endif
-        // update the sketch
+        // update the sketch 
         cmSketch_->Update((uint8_t*)&tmpHashStr[0], CHUNK_HASH_SIZE, 1);
 
         // estimate the current frequency
@@ -723,6 +717,7 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
         _freqTime += (_endTime - _startTime);
         _freqCount++;
 #endif
+
 
 #if (SGX_BREAKDOWN == 1)
         Ocall_GetCurrentTime(&_startTime);
@@ -735,7 +730,7 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
 #if (SGX_BREAKDOWN == 1)
         Ocall_GetCurrentTime(&_endTime);
         _firstDedupTime += (_endTime - _startTime);
-        _firstDedupCount++;
+        _firstDedupCount++; 
 #endif
 
         if (chunkFreq < currentMinFreq) {
@@ -743,9 +738,9 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
             Ocall_GetCurrentTime(&_startTime);
 #endif
             // its frequency is smaller than the minimum value in the min-heap
-            cryptoObj_->IndexAESCMCEnc(cipherCtx, (uint8_t*)&tmpHashStr[0], CHUNK_HASH_SIZE,
+            cryptoObj_->IndexAESCMCEnc(cipherCtx, (uint8_t*)&tmpHashStr[0], CHUNK_HASH_SIZE, 
                 Enclave::indexQueryKey_, (uint8_t*)&tmpCipherHashStr[0]);
-
+            
             status = this->ReadIndexStore(tmpCipherHashStr, tmpCipherAddrStr, upOutSGX);
 #if (SGX_BREAKDOWN == 1)
             Ocall_GetCurrentTime(&_endTime);
@@ -754,19 +749,19 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
 #endif
 
             if (status == false) {
-                // this is unique chunk
+                 // this is unique chunk
                 // this chunk does not exist in the outside index
                 _uniqueChunkNum++;
                 _uniqueDataSize += tmpChunkSize;
 
                 // process one unique chunk
-                this->ProcessUniqueChunk((RecipeEntry_t*)&tmpChunkAddrStr[0],
+                this->ProcessUniqueChunk((RecipeEntry_t*)&tmpChunkAddrStr[0], 
                     recvBuffer + currentOffset, tmpChunkSize, upOutSGX);
 #if (SGX_BREAKDOWN == 1)
                 Ocall_GetCurrentTime(&_startTime);
 #endif
                 // encrypt the chunk address
-                cryptoObj_->AESCBCEnc(cipherCtx, (uint8_t*)&tmpChunkAddrStr[0], sizeof(RecipeEntry_t),
+                cryptoObj_->AESCBCEnc(cipherCtx, (uint8_t*)&tmpChunkAddrStr[0], sizeof(RecipeEntry_t), 
                     Enclave::indexQueryKey_, (uint8_t*)&tmpCipherAddrStr[0]);
                 // update the outside index
                 this->UpdateIndexStore(tmpCipherHashStr, &tmpCipherAddrStr[0], sizeof(RecipeEntry_t));
@@ -779,9 +774,9 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
 #if (SGX_BREAKDOWN == 1)
                 Ocall_GetCurrentTime(&_startTime);
 #endif
-                // this is duplicate chunk, decrypt the value
+                 // this is duplicate chunk, decrypt the value
                 cryptoObj_->AESCBCDec(cipherCtx, (uint8_t*)&tmpCipherAddrStr[0], sizeof(RecipeEntry_t),
-                    Enclave::indexQueryKey_, (uint8_t*)&tmpChunkAddrStr[0]);
+                    Enclave::indexQueryKey_, (uint8_t*)&tmpChunkAddrStr[0]); 
 #if (SGX_BREAKDOWN == 1)
                 Ocall_GetCurrentTime(&_endTime);
                 _secondDedupTime += (_endTime - _startTime);
@@ -820,9 +815,9 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
                 Ocall_GetCurrentTime(&_startTime);
 #endif
                 // this chunk is non-duplicate in current index
-                cryptoObj_->IndexAESCMCEnc(cipherCtx, (uint8_t*)&tmpHashStr[0], CHUNK_HASH_SIZE,
-                    Enclave::indexQueryKey_, (uint8_t*)&tmpCipherHashStr[0]);
-
+                cryptoObj_->IndexAESCMCEnc(cipherCtx, (uint8_t*)&tmpHashStr[0], CHUNK_HASH_SIZE, 
+                Enclave::indexQueryKey_, (uint8_t*)&tmpCipherHashStr[0]);
+            
                 status = this->ReadIndexStore(tmpCipherHashStr, tmpCipherAddrStr, upOutSGX);
 #if (SGX_BREAKDOWN == 1)
                 Ocall_GetCurrentTime(&_endTime);
@@ -836,13 +831,13 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
                     _uniqueDataSize += tmpChunkSize;
 
                     // process one unique chunk
-                    this->ProcessUniqueChunk((RecipeEntry_t*)&tmpChunkAddrStr[0],
+                    this->ProcessUniqueChunk((RecipeEntry_t*)&tmpChunkAddrStr[0], 
                         recvBuffer + currentOffset, tmpChunkSize, upOutSGX);
                     // encrypt the chunk address
 #if (SGX_BREAKDOWN == 1)
                     Ocall_GetCurrentTime(&_startTime);
 #endif
-                    cryptoObj_->AESCBCEnc(cipherCtx, (uint8_t*)&tmpChunkAddrStr[0], sizeof(RecipeEntry_t),
+                    cryptoObj_->AESCBCEnc(cipherCtx, (uint8_t*)&tmpChunkAddrStr[0], sizeof(RecipeEntry_t), 
                         Enclave::indexQueryKey_, (uint8_t*)&tmpCipherAddrStr[0]);
 
                     // update the outside index
@@ -858,7 +853,7 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
 #endif
                     // this is duplicate chunk, decrypt the value
                     cryptoObj_->AESCBCDec(cipherCtx, (uint8_t*)&tmpCipherAddrStr[0], sizeof(RecipeEntry_t),
-                        Enclave::indexQueryKey_, (uint8_t*)&tmpChunkAddrStr[0]);
+                        Enclave::indexQueryKey_, (uint8_t*)&tmpChunkAddrStr[0]); 
 #if (SGX_BREAKDOWN == 1)
                     Ocall_GetCurrentTime(&_endTime);
                     _secondDedupTime += (_endTime - _startTime);
@@ -891,9 +886,9 @@ void EcallFreqIndex::ProcessOneBatch(SendMsgBuffer_t* recvChunkBuf,
     Ocall_GetCurrentTime(&_endTime);
     _testOCallTime += (_endTime - _startTime);
     _testOCallCount++;
-#endif
+#endif 
 
-    return;
+    return ;
 }
 
 #endif

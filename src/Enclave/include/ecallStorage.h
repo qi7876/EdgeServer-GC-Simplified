@@ -4,9 +4,9 @@
  * @brief define the interface of storage core inside the enclave
  * @version 0.1
  * @date 2020-12-16
- *
+ * 
  * @copyright Copyright (c) 2020
- *
+ * 
  */
 
 #ifndef ECALL_STORAGE_H
@@ -15,45 +15,45 @@
 #include "commonEnclave.h"
 
 class EcallStorageCore {
-private:
-    string myName_ = "StorageCore";
+    private:
+        string myName_ = "StorageCore"; 
 
-    // written data size
-    uint64_t writtenDataSize_ = 0;
-    uint64_t writtenChunkNum_ = 0;
+        // written data size
+        uint64_t writtenDataSize_ = 0;
+        uint64_t writtenChunkNum_ = 0;
 
-    // crypto obj inside the enclave
-    EcallCrypto* cryptoObj_;
+        // crypto obj inside the enclave 
+        EcallCrypto* cryptoObj_;
+    public:
+        /**
+         * @brief Construct a new Ecall Storage Core object
+         * 
+         */
+        EcallStorageCore();
 
-public:
-    /**
-     * @brief Construct a new Ecall Storage Core object
-     *
-     */
-    EcallStorageCore();
+        /**
+         * @brief Destroy the Ecall Storage Core object
+         * 
+         */
+        ~EcallStorageCore();
 
-    /**
-     * @brief Destroy the Ecall Storage Core object
-     *
-     */
-    ~EcallStorageCore();
+        /**
+         * @brief save the chunk to the storage serve
+         * 
+         * @param chunkData the chunk data buffer
+         * @param chunkSize the chunk size
+         * @param chunkAddr the chunk address (return)
+         * @param upOutSGX the pointer to outside SGX buffer
+         */
+        void SaveChunk(char* chunkData, uint32_t chunkSize,
+            uint8_t* containerName, UpOutSGX_t* upOutSGX, uint8_t* chunkHash);
 
-    /**
-     * @brief save the chunk to the storage serve
-     *
-     * @param chunkData the chunk data buffer
-     * @param chunkSize the chunk size
-     * @param chunkAddr the chunk address (return)
-     * @param upOutSGX the pointer to outside SGX buffer
-     */
-    void SaveChunk(char* chunkData, uint32_t chunkSize,
-        uint8_t* containerName, UpOutSGX_t* upOutSGX, uint8_t* chunkHash);
+        void SaveChunk_RT(char* chunkData, uint32_t chunkSize,
+            uint8_t* containerName, RtOutSGX_t* rtOutSGX, uint8_t* chunkHash);
 
-    void SaveChunk_RT(char* chunkData, uint32_t chunkSize,
-        uint8_t* containerName, RtOutSGX_t* rtOutSGX, uint8_t* chunkHash);
+        void SaveChunk_GC(char* chunkData, uint32_t chunkSize,
+            uint8_t* containerName, GcOutSGX_t* gcOutSGX, uint8_t* chunkHash);
 
-    void SaveChunk_GC(char* chunkData, uint32_t chunkSize,
-        uint8_t* containerName, GcOutSGX_t* gcOutSGX, uint8_t* chunkHash);
 };
 
 #endif
