@@ -4,9 +4,9 @@
  * @brief define the interface of the chunker
  * @version 0.1
  * @date 2019-12-19
- * 
+ *
  * @copyright Copyright (c) 2019
- * 
+ *
  */
 #ifndef BASICDEDUP_CHUNKER_h
 #define BASICDEDUP_CHUNKER_h
@@ -26,7 +26,7 @@ using namespace std;
 
 extern Configure config;
 
-// a 256 random 32-bit integers 
+// a 256 random 32-bit integers
 static const uint32_t GEAR[] = {
     0x5C95C078, 0x22408989, 0x2D48A214, 0x12842087, 0x530F8AFB, 0x474536B9,
     0x2963B4F1, 0x44CB738B, 0x4EA7403D, 0x4D606B6E, 0x074EC5D3, 0x3AF39D18,
@@ -70,143 +70,146 @@ static const uint32_t GEAR[] = {
     0x440D2476, 0x588EA8DD, 0x4665A658, 0x7446C418, 0x1877A774, 0x5626407E,
     0x7F63BD46, 0x32D2DBD8, 0x3C790F4A, 0x772B7239, 0x6F8B2826, 0x677FF609,
     0x0DC82C11, 0x23FFE354, 0x2EAC53A6, 0x16139E09, 0x0AFD0DBC, 0x2A4D4237,
-    0x56A368C7, 0x234325E4, 0x2DCE9187, 0x32E8EA7E};
+    0x56A368C7, 0x234325E4, 0x2DCE9187, 0x32E8EA7E
+};
 
-class Chunker{
-    private:
-        string myName_ = "Chunker";
-        // for generate compressed data
-        CompressGen* compressGenObj_;    
+class Chunker {
+private:
+    string myName_ = "Chunker";
+    // for generate compressed data
+    CompressGen* compressGenObj_;
 
-        int chunkerType_; // chunker type setting (FIX_SIZE_TYPE or VAR_SIZE_TYPE)
+    int chunkerType_; // chunker type setting (FIX_SIZE_TYPE or VAR_SIZE_TYPE)
 
-        // chunk size settings
-        uint64_t avgChunkSize_;
-        uint64_t minChunkSize_;
-        uint64_t maxChunkSize_;
+    // chunk size settings
+    uint64_t avgChunkSize_;
+    uint64_t minChunkSize_;
+    uint64_t maxChunkSize_;
 
-        // sliding window size
-        int slidingWinSize_;
-        uint8_t* waitingForChunkingBuffer_;
-        uint8_t* chunkBuffer_;
-        uint64_t readSize_;
+    // sliding window size
+    int slidingWinSize_;
+    uint8_t* waitingForChunkingBuffer_;
+    uint8_t* chunkBuffer_;
+    uint64_t readSize_;
 
-        // for data recipe 
-        ifstream chunkingFile_;
+    // for data recipe
+    ifstream chunkingFile_;
 
-        // message queue: chunk unit
-        MessageQueue<Data_t>* outputMQ_;
+    // message queue: chunk unit
+    MessageQueue<Data_t>* outputMQ_;
 
-        // FAST_CDC
-        size_t pos_ = 0;
-        uint32_t normalSize_;
-        uint32_t maskS_;
-        uint32_t maskL_;
+    // FAST_CDC
+    size_t pos_ = 0;
+    uint32_t normalSize_;
+    uint32_t maskS_;
+    uint32_t maskL_;
 
-        // for compression
-        double avgCompressRatio_ = 2;
-        double stdCompressRatio_ = 0.25;
-    
-        // for breakdown
+    // for compression
+    double avgCompressRatio_ = 2;
+    double stdCompressRatio_ = 0.25;
+
+    // for breakdown
 #if (CHUNKING_BREAKDOWN == 1)
-        double insertTime_ = 0;
+    double insertTime_ = 0;
 #endif
-        double totalTime_ = 0;
+    double totalTime_ = 0;
 
-        /**
-         * @brief fix size chunking process
-         * 
-         */
-        void fixSizeChunking();
+    /**
+     * @brief fix size chunking process
+     *
+     */
+    void fixSizeChunking();
 
-        /**
-         * @brief FSL trace-driven chunking
-         * 
-         */
-        void FSLChunking();
+    /**
+     * @brief FSL trace-driven chunking
+     *
+     */
+    void FSLChunking();
 
-        /**
-         * @brief UBC trace-driven chunking
-         * 
-         */
-        void UBCChunking();
+    /**
+     * @brief UBC trace-driven chunking
+     *
+     */
+    void UBCChunking();
 
-        /**
-         * @brief initialize the chunker inputstream
-         * 
-         * @param path 
-         */
-        void ChunkerInit(string path);
+    /**
+     * @brief initialize the chunker inputstream
+     *
+     * @param path
+     */
+    void ChunkerInit(string path);
 
-        /**
-         * @brief load the input file 
-         * 
-         * @param path the path of the chunking file
-         */
-        void LoadChunkFile(string path);
+    /**
+     * @brief load the input file
+     *
+     * @param path the path of the chunking file
+     */
+    void LoadChunkFile(string path);
 
-        /**
-         * @brief use FastCDC to do the chunking 
-         * 
-         */
-        void FastCDC();
+    /**
+     * @brief use FastCDC to do the chunking
+     *
+     */
+    void FastCDC();
 
-        /**
-         * @brief compute the normal size 
-         * 
-         * @param min 
-         * @param av 
-         * @param max 
-         * @return uint32_t 
-         */
-        uint32_t CalNormalSize(const uint32_t min, const uint32_t av, const uint32_t max);
+    /**
+     * @brief compute the normal size
+     *
+     * @param min
+     * @param av
+     * @param max
+     * @return uint32_t
+     */
+    uint32_t CalNormalSize(const uint32_t min, const uint32_t av, const uint32_t max);
 
-        /**
-         * @brief generate the mask according to the given bits
-         * 
-         * @param bits the number of '1' + 1
-         * @return uint32_t the returned mask
-         */
-        uint32_t GenerateFastCDCMask(uint32_t bits);
+    /**
+     * @brief generate the mask according to the given bits
+     *
+     * @param bits the number of '1' + 1
+     * @return uint32_t the returned mask
+     */
+    uint32_t GenerateFastCDCMask(uint32_t bits);
 
-        /**
-         * @brief To get the offset of chunks for a given buffer  
-         * 
-         * @param src the input buffer  
-         * @param len the length of this buffer
-         * @return uint32_t length of this chunk.
-         */
-        uint32_t CutPoint(const uint8_t* src, const uint32_t len);
-    public:
-        Data_t _recipe;
-        /**
-         * @brief Construct a new Chunker object
-         * 
-         * @param path the target file path 
-         */
-        Chunker(std::string path);
+    /**
+     * @brief To get the offset of chunks for a given buffer
+     *
+     * @param src the input buffer
+     * @param len the length of this buffer
+     * @return uint32_t length of this chunk.
+     */
+    uint32_t CutPoint(const uint8_t* src, const uint32_t len);
 
-        /**
-         * @brief Destroy the Chunker object
-         * 
-         */
-        ~Chunker();
+public:
+    Data_t _recipe;
+    /**
+     * @brief Construct a new Chunker object
+     *
+     * @param path the target file path
+     */
+    Chunker(std::string path);
 
-        /**
-         * @brief the chunking process
-         * 
-         */
-        void Chunking();
+    /**
+     * @brief Destroy the Chunker object
+     *
+     */
+    ~Chunker();
 
-        /**
-         * @brief Set the OutputMQ object
-         * 
-         * @param outputMQ the output MQ
-         */
-        void SetOutputMQ(MessageQueue<Data_t>* outputMQ) {
-            outputMQ_ = outputMQ;
-            return ;
-        }
+    /**
+     * @brief the chunking process
+     *
+     */
+    void Chunking();
+
+    /**
+     * @brief Set the OutputMQ object
+     *
+     * @param outputMQ the output MQ
+     */
+    void SetOutputMQ(MessageQueue<Data_t>* outputMQ)
+    {
+        outputMQ_ = outputMQ;
+        return;
+    }
 };
 
 #endif // BASICDEDUP_CHUNKER_h

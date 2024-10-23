@@ -4,9 +4,9 @@
  * @brief define the interface of Remote attestion util
  * @version 0.1
  * @date 2021-05-21
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #ifndef RA_UTIL_H
@@ -22,11 +22,11 @@
 #include "sgx_uae_epid.h"
 #include "sgx_ukey_exchange.h"
 
-#if (ENABLE_SGX_RA==1)
+#if (ENABLE_SGX_RA == 1)
 #include "../build/src/Enclave/storeEnclave_u.h"
 #endif
 
-//server public key
+// server public key
 static const sgx_ec256_public_t def_service_public_key = {
     { 0x72, 0x12, 0x8a, 0x7a, 0x17, 0x52, 0x6e, 0xbf,
         0x85, 0xd0, 0x3a, 0x62, 0x37, 0x30, 0xae, 0xad,
@@ -42,31 +42,30 @@ static const sgx_ec256_public_t def_service_public_key = {
 extern Configure config;
 
 class RAUtil {
-    private:
-        string myName_ = "RAUtil";
-        // for communication
-        SSLConnection* dataSecureChannel_;
+private:
+    string myName_ = "RAUtil";
+    // for communication
+    SSLConnection* dataSecureChannel_;
 
-        void SendMsg01RevMsg2(uint32_t extendedEPIDGroupID, sgx_ra_msg1_t& msg1,
-            sgx_ra_msg2_t& msg2, SSL* newClientConnection);
+    void SendMsg01RevMsg2(uint32_t extendedEPIDGroupID, sgx_ra_msg1_t& msg1,
+        sgx_ra_msg2_t& msg2, SSL* newClientConnection);
 
-        void SendMsg3(sgx_ra_msg3_t* msg3, uint32_t msg3Size, ra_msg4_t& msg4,
-            SSL* newClientConnection);
-        
-        bool verbose_;
+    void SendMsg3(sgx_ra_msg3_t* msg3, uint32_t msg3Size, ra_msg4_t& msg4,
+        SSL* newClientConnection);
 
-    public:
+    bool verbose_;
 
-        RAUtil(SSLConnection* dataSecurityChannelObj);
+public:
+    RAUtil(SSLConnection* dataSecurityChannelObj);
 
-        /**
-         * @brief Destroy the RAUtil object
-         * 
-         */
-        ~RAUtil();
+    /**
+     * @brief Destroy the RAUtil object
+     *
+     */
+    ~RAUtil();
 
-        void DoAttestation(sgx_enclave_id_t eidSGX, sgx_ra_context_t& raCtx, 
-            SSL* newClientConnection);
+    void DoAttestation(sgx_enclave_id_t eidSGX, sgx_ra_context_t& raCtx,
+        SSL* newClientConnection);
 };
 
 #endif

@@ -4,29 +4,30 @@
  * @brief implement the interface of in-memory index
  * @version 0.1
  * @date 2021-05-05
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #include "../../include/inMemoryDatabase.h"
 #include "inMemoryDatabase.h"
 
-
 /**
  * @brief Construct a new In Memory Database object
- * 
+ *
  * @param dbName the path of the db file
  */
-InMemoryDatabase::InMemoryDatabase(std::string dbName) {
+InMemoryDatabase::InMemoryDatabase(std::string dbName)
+{
     this->OpenDB(dbName);
 }
 
 /**
  * @brief Destroy the In Memory Database object
- * 
+ *
  */
-InMemoryDatabase::~InMemoryDatabase() {
+InMemoryDatabase::~InMemoryDatabase()
+{
     // perisistent the indexFile to the disk
     ofstream dbFile;
     dbFile.open(dbName_, ios_base::trunc | ios_base::binary);
@@ -47,18 +48,19 @@ InMemoryDatabase::~InMemoryDatabase() {
 
 /**
  * @brief open a database
- * 
+ *
  * @param dbName the db path
  * @return true success
  * @return false fails
  */
-bool InMemoryDatabase::OpenDB(std::string dbName) {
+bool InMemoryDatabase::OpenDB(std::string dbName)
+{
     dbName_ = dbName;
     // check whether there exists the index
     ifstream dbFile;
     dbFile.open(dbName_, ios_base::in | ios_base::binary);
     if (!dbFile.is_open()) {
-        //fprintf(stderr, "InMemoryDatabase: cannot open the db file.\n");
+        // fprintf(stderr, "InMemoryDatabase: cannot open the db file.\n");
     }
 
     size_t beginSize = dbFile.tellg();
@@ -68,7 +70,7 @@ bool InMemoryDatabase::OpenDB(std::string dbName) {
 
     if (fileSize == 0) {
         // db file not exist
-        //fprintf(stderr, "InMemoryDatabase: db file file is not exists, create a new one.\n");
+        // fprintf(stderr, "InMemoryDatabase: db file file is not exists, create a new one.\n");
     } else {
         // db file exist, load
         dbFile.seekg(0, ios_base::beg);
@@ -82,14 +84,14 @@ bool InMemoryDatabase::OpenDB(std::string dbName) {
             if (itemSize == 0) {
                 break;
             }
-            key.resize(itemSize, 0); 
+            key.resize(itemSize, 0);
             dbFile.read((char*)&key[0], itemSize);
 
             // read value
             dbFile.read((char*)&itemSize, sizeof(itemSize));
             value.resize(itemSize, 0);
             dbFile.read((char*)&value[0], itemSize);
-            
+
             // update the index
             indexObj_.insert(make_pair(key, value));
             itemSize = 0;
@@ -104,47 +106,48 @@ bool InMemoryDatabase::OpenDB(std::string dbName) {
 
 /**
  * @brief execute query over database
- * 
+ *
  * @param key key
  * @param value value
  * @return true success
  * @return false fail
  */
-bool InMemoryDatabase::Query(const std::string& key, std::string& value) {
+bool InMemoryDatabase::Query(const std::string& key, std::string& value)
+{
     auto findResult = indexObj_.find(key);
     if (findResult != indexObj_.end()) {
         // it exists in the index
         value.assign(findResult->second);
         return true;
-    } 
+    }
     return false;
 }
 
-
 /**
  * @brief insert the (key, value) pair
- * 
+ *
  * @param key key
  * @param value value
  * @return true success
  * @return false fail
  */
-bool InMemoryDatabase::Insert(const std::string& key, const std::string& value) {
+bool InMemoryDatabase::Insert(const std::string& key, const std::string& value)
+{
     indexObj_[key] = value;
     return true;
 }
 
-
 /**
  * @brief insert the (key, value) pair
- * 
- * @param key 
- * @param buffer 
- * @param bufferSize 
- * @return true 
- * @return false 
+ *
+ * @param key
+ * @param buffer
+ * @param bufferSize
+ * @return true
+ * @return false
  */
-bool InMemoryDatabase::InsertBuffer(const std::string& key, const char* buffer, size_t bufferSize) {
+bool InMemoryDatabase::InsertBuffer(const std::string& key, const char* buffer, size_t bufferSize)
+{
     string valueStr;
     valueStr.assign(buffer, bufferSize);
     indexObj_[key] = valueStr;
@@ -153,16 +156,17 @@ bool InMemoryDatabase::InsertBuffer(const std::string& key, const char* buffer, 
 
 /**
  * @brief insert the (key, value) pair
- * 
- * @param key 
- * @param keySize 
- * @param buffer 
- * @param bufferSize 
- * @return true 
- * @return false 
+ *
+ * @param key
+ * @param keySize
+ * @param buffer
+ * @param bufferSize
+ * @return true
+ * @return false
  */
 bool InMemoryDatabase::InsertBothBuffer(const char* key, size_t keySize, const char* buffer,
-    size_t bufferSize) {
+    size_t bufferSize)
+{
     string keyStr;
     string valueStr;
     keyStr.assign(key, keySize);
@@ -173,17 +177,18 @@ bool InMemoryDatabase::InsertBothBuffer(const char* key, size_t keySize, const c
 
 /**
  * @brief query the (key, value) pair
- * 
- * @param key 
- * @param keySize 
- * @param value 
- * @return true 
- * @return false 
+ *
+ * @param key
+ * @param keySize
+ * @param value
+ * @return true
+ * @return false
  */
-bool InMemoryDatabase::QueryBuffer(const char* key, size_t keySize, std::string& value) {
+bool InMemoryDatabase::QueryBuffer(const char* key, size_t keySize, std::string& value)
+{
     string keyStr;
     keyStr.assign(key, keySize);
-    //tool::Logging("inmemory database", "find start\n");
+    // tool::Logging("inmemory database", "find start\n");
     auto findResult = indexObj_.find(keyStr);
     if (findResult != indexObj_.end()) {
         // it exists in the index
@@ -197,7 +202,7 @@ void InMemoryDatabase::MapClear()
 {
     indexObj_.clear();
     tool::Logging("FP Index", "Fp index clear done\n");
-    return ;
+    return;
 }
 
 void InMemoryDatabase::Save()
@@ -217,5 +222,5 @@ void InMemoryDatabase::Save()
         dbFile.write(it->second.c_str(), itemSize);
     }
     dbFile.close();
-    return ;
+    return;
 }

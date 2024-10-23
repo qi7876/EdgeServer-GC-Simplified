@@ -23,30 +23,30 @@ private:
     ClientVar* outClient_MR;
     ClientVar* outClient_RT;
     ClientVar* outClient_GC;
-    // use client id as edge id(fix later) 
+    // use client id as edge id(fix later)
     int edgeId_;
     // index type
     int indexType_;
     // statics
-    uint64_t  totalMigrateRecipeNum;
-    uint64_t  sendSecRecipeBatchSize_; 
-    uint64_t  enterEnclaveBatchSize_;
-    // buffer 
+    uint64_t totalMigrateRecipeNum;
+    uint64_t sendSecRecipeBatchSize_;
+    uint64_t enterEnclaveBatchSize_;
+    // buffer
     uint8_t* ChunkIsInCloud; // edge 2 cloud upload use
     uint8_t* secFpInCloud; // for retrieve chunk
     // cryptobj_
     CryptoPrimitive* cryptoObj_;
-    // container name 
+    // container name
     string containerNamePrefix_;
     string containerNameTail_;
     // data writer
     DataWriter* dataWriterObj_;
 
     bool loginDone;
+
 public:
-    
-    EnclaveMigrator(sgx_enclave_id_t eidSGX, int indexType) ;
-    
+    EnclaveMigrator(sgx_enclave_id_t eidSGX, int indexType);
+
     ~EnclaveMigrator();
 
     void BuildConnectionWithCloud();
@@ -81,14 +81,13 @@ public:
 
     void MigrateDeleteChunk();
 
-    void GetReqContainer_GC(ClientVar *outClient);
+    void GetReqContainer_GC(ClientVar* outClient);
 
     void GCAddIndex();
 
-    void MigrateDeleteContainer(ClientVar *outClient);
+    void MigrateDeleteContainer(ClientVar* outClient);
 
-    int getContainerSize(vector<string> &containerList);
-
+    int getContainerSize(vector<string>& containerList);
 };
 
 #endif

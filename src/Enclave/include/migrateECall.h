@@ -9,13 +9,11 @@
 
 class EcallMigrator;
 
-namespace MigrateEnclave
-{
-    extern EcallMigrator* ecallMigratorObj_;
+namespace MigrateEnclave {
+extern EcallMigrator* ecallMigratorObj_;
 }
 
 using namespace MigrateEnclave;
-
 
 void Ecall_Init_Migrate();
 
@@ -34,7 +32,7 @@ void Ecall_ProcessOneBatchChunk(uint8_t* chunkContentBuffer, size_t chunkNum, Rt
 void Ecall_GCOneBatch(uint8_t* recipeBuffer, size_t recipeNum, GcOutSGX_t* gcOutSGX);
 
 void Ecall_UpdataIndexOneBatch(uint8_t* recipeBuffer, size_t recipeNum, GcOutSGX_t* gcOutSGX);
-    
+
 void Ecall_DeleteIndexOneBatch(uint8_t* recipeBuffer, size_t recipeNum, GcOutSGX_t* gcOutSGX);
 
 #endif

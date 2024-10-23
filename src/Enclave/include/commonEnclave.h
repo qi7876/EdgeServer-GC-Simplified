@@ -4,9 +4,9 @@
  * @brief the common structure of the enclave
  * @version 0.1
  * @date 2021-03-24
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #ifndef COMMON_ENCLAVE_H
@@ -36,24 +36,24 @@ class EnclaveBase;
 
 using namespace std;
 namespace Enclave {
-    void Logging(const char* logger, const char* fmt, ...);
-    void WriteBufferToFile(uint8_t* buffer, size_t bufferSize, const char* fileName);
-    void ReadFileToBuffer(uint8_t* buffer, size_t bufferSize, const char* fileName);
-    void PrintBinaryBuffer(uint8_t* buffer, size_t bufferSize);
-    extern unordered_map<int, string> clientSessionKeyIndex_;
-    extern uint8_t* enclaveKey_;
-    extern uint8_t* indexQueryKey_; 
-    extern bool firstBootstrap_; // use to control the RA
-    // config
-    extern uint64_t sendChunkBatchSize_;
-    extern uint64_t sendRecipeBatchSize_;
-    extern uint64_t topKParam_;
-    // mutex
-    extern mutex sessionKeyLck_;
-    extern mutex sketchLck_;
-    extern mutex topKIndexLck_;
-    // the obj to the enclave index
-    extern EnclaveBase* enclaveBaseObj_;
+void Logging(const char* logger, const char* fmt, ...);
+void WriteBufferToFile(uint8_t* buffer, size_t bufferSize, const char* fileName);
+void ReadFileToBuffer(uint8_t* buffer, size_t bufferSize, const char* fileName);
+void PrintBinaryBuffer(uint8_t* buffer, size_t bufferSize);
+extern unordered_map<int, string> clientSessionKeyIndex_;
+extern uint8_t* enclaveKey_;
+extern uint8_t* indexQueryKey_;
+extern bool firstBootstrap_; // use to control the RA
+// config
+extern uint64_t sendChunkBatchSize_;
+extern uint64_t sendRecipeBatchSize_;
+extern uint64_t topKParam_;
+// mutex
+extern mutex sessionKeyLck_;
+extern mutex sketchLck_;
+extern mutex topKIndexLck_;
+// the obj to the enclave index
+extern EnclaveBase* enclaveBaseObj_;
 };
 
 #endif
